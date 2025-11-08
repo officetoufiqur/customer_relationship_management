@@ -132,7 +132,7 @@ export default {
           <slot />
         </b-container>
       </div>
-      <Footer />
+      <!-- <Footer /> -->
     </div>
     <RightBar />
   </div>

@@ -17,3 +17,8 @@ use Illuminate\Support\Facades\Route;
 Route::middleware('auth:sanctum')->get('/user', function (Request $request) {
     return $request->user();
 });
+
+Route::apiResource('employees', \App\Http\Controllers\Api\EmployeeController::class);
+
+Route::get('/employees', [App\Http\Controllers\EmployeeController::class, 'userData']);
+Route::post('/employees/store', [App\Http\Controllers\EmployeeController::class, 'store']);

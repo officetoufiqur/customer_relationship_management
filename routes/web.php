@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Controllers\EmployeeController;
 use App\Http\Controllers\VelzonRoutesController;
 use Illuminate\Support\Facades\Route;
 
@@ -15,13 +16,19 @@ use Illuminate\Support\Facades\Route;
 */
 
 Route::middleware(['auth:sanctum', config('jetstream.auth_session'), 'verified',])->group(function () {
+    Route::controller(EmployeeController::class)->group(function () {
+        Route::get('/employees/list', 'index')->name('employees.list');
+        Route::post('/employees/store', 'store')->name('employees.store');
+        Route::put('/employees/update/{id}', 'update')->name('employees.update');
+        Route::get("/employee/profile/{id}", "employeeProfile")->name("employee.profile");
+    });
 
     Route::controller(VelzonRoutesController::class)->group(function () {
 
         // dashboards
         Route::get('/', 'dashboard');
         Route::get('/dashboard/analytics', 'dashboard_analytics');
-        Route::get('/dashboard/crm', 'dashboard_crm');
+        Route::get('/dashboard', 'dashboard_crm');
         Route::get('/dashboard/crypto', 'dashboard_crypto');
         Route::get('/dashboard/job', 'dashboard_job');
         Route::get('/dashboard/nft', 'dashboard_nft');
@@ -179,7 +186,7 @@ Route::middleware(['auth:sanctum', config('jetstream.auth_session'), 'verified',
 
         // pages routes
         Route::get("/pages/starter", "pages_starter");
-        Route::get("/pages/profile", "pages_profile");
+        // Route::get("/pages/profile", "pages_profile");
         Route::get("/pages/profile-setting", "pages_profile_setting");
         Route::get("/pages/maintenance", "pages_maintenance");
         Route::get("/pages/coming-soon", "pages_coming_soon");

@@ -225,94 +225,55 @@ export default {
                     <span data-key="t-menu"> {{ $t("t-menu") }}</span>
                 </li>
                 <li class="nav-item">
+                    <Link
+                        href="/dashboard"
+                        class="nav-link"
+                        data-key="t-crm"
+                    >
+                        {{ $t("t-dashboards") }}
+                    </Link>
+                </li>
+
+                <li class="nav-item">
                     <a
-                        class="nav-link menu-link"
-                        href="#sidebarDashboards"
+                        class="nav-link"
+                        href="#sidebarUser"
                         data-bs-toggle="collapse"
                         role="button"
                         aria-expanded="false"
-                        aria-controls="sidebarDashboards"
+                        aria-controls="sidebarUser"
+                        data-key="t-user-management"
                     >
-                        <i class="ri-dashboard-2-line"></i>
-                        <span data-key="t-dashboards">
-                            {{ $t("t-dashboards") }}</span
-                        >
+                        <i class="bx bxs-user-account"></i>
+                        Employee Management
                     </a>
-                    <div class="collapse menu-dropdown" id="sidebarDashboards">
+                    <div class="collapse menu-dropdown" id="sidebarUser">
                         <ul class="nav nav-sm flex-column">
                             <li class="nav-item">
                                 <Link
-                                    href="/dashboard/analytics"
-                                    class="nav-link custom-abc"
-                                    data-key="t-analytics"
+                                    href="/employees/list"
+                                    class="nav-link"
+                                    data-key="t-simple-page"
                                 >
-                                    {{ $t("t-analytics") }}
+                                    Employee List
                                 </Link>
                             </li>
                             <li class="nav-item">
                                 <Link
-                                    href="/dashboard/crm"
+                                    href="/pages/profile"
                                     class="nav-link"
-                                    data-key="t-crm"
+                                    data-key="t-simple-page"
                                 >
-                                    {{ $t("t-crm") }}
+                                    {{ $t("t-simple-page") }}
                                 </Link>
                             </li>
                             <li class="nav-item">
                                 <Link
-                                    href="/"
+                                    href="/pages/profile-setting"
                                     class="nav-link"
-                                    data-key="t-ecommerce"
+                                    data-key="t-settings"
                                 >
-                                    {{ $t("t-ecommerce") }}
-                                </Link>
-                            </li>
-                            <li class="nav-item">
-                                <Link
-                                    href="/dashboard/crypto"
-                                    class="nav-link"
-                                    data-key="t-crypto"
-                                >
-                                    {{ $t("t-crypto") }}
-                                </Link>
-                            </li>
-                            <li class="nav-item">
-                                <Link
-                                    href="/dashboard/projects"
-                                    class="nav-link"
-                                    data-key="t-projects"
-                                >
-                                    {{ $t("t-projects") }}
-                                </Link>
-                            </li>
-                            <li class="nav-item">
-                                <Link
-                                    href="/dashboard/nft"
-                                    class="nav-link"
-                                    data-key="t-nft"
-                                >
-                                    {{ $t("t-nft") }}
-                                </Link>
-                            </li>
-                            <li class="nav-item">
-                                <Link
-                                    href="/dashboard/job"
-                                    class="nav-link"
-                                    data-key="t-job"
-                                >
-                                    {{ $t("t-job") }}
-                                </Link>
-                            </li>
-                            <li class="nav-item">
-                                <Link
-                                    href="/dashboard/blog"
-                                    class="nav-link"
-                                    data-key="t-blog"
-                                >
-                                    {{ $t("t-blog") }}
-                                    <span class="badge badge-pill bg-success">{{
-                                        $t("t-new")
-                                    }}</span>
+                                    {{ $t("t-settings") }}
                                 </Link>
                             </li>
                         </ul>
@@ -364,6 +325,7 @@ export default {
                         </ul>
                     </div>
                 </li>
+
                 <!-- end Dashboard Menu -->
                 <li class="nav-item">
                     <a

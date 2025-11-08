@@ -11,8 +11,8 @@ defineProps({
 });
 
 const form = useForm({
-    email: 'admin@themesbrand.com' || '',
-    password: '12345678' || '',
+    email: 'admin@gmail.com' || '',
+    password: 'password' || '',
     remember: false,
 });
 
