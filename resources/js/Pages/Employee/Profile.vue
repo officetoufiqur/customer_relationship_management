@@ -43,12 +43,11 @@ export default {
                 </template>
                 <template v-else>
                     <img
-                    src="@assets/images/profile-bg.jpg"
-                    alt=""
-                    class="profile-wid-img"
-                />
+                        src="@assets/images/profile-bg.jpg"
+                        alt=""
+                        class="profile-wid-img"
+                    />
                 </template>
-                
             </div>
         </div>
         <div class="pt-4 mb-4 mb-lg-3 pb-lg-4 profile-wrapper">
@@ -87,13 +86,7 @@ export default {
                                 <i
                                     class="ri-map-pin-user-line me-1 text-white text-opacity-75 fs-16 align-middle"
                                 ></i
-                                >California, United States
-                            </div>
-                            <div>
-                                <i
-                                    class="ri-building-line me-1 text-white text-opacity-75 fs-16 align-middle"
-                                ></i
-                                >Themesbrand
+                                >{{ employee.location }}
                             </div>
                         </div>
                     </div>
@@ -110,11 +103,12 @@ export default {
                     >
                         <div class="d-flex justify-content-end">
                             <Link
-                                href="/pages/profile-setting"
+                                :href="`/profile/setting/${employee.id}`"
                                 class="btn btn-success"
-                                ><i class="ri-edit-box-line align-bottom"></i>
-                                Edit Profile</Link
                             >
+                                <i class="ri-edit-box-line align-bottom"></i>
+                                Edit Profile
+                            </Link>
                         </div>
                     </div>
                     <BTabs
@@ -148,12 +142,14 @@ export default {
                                                                 class="ps-0"
                                                                 scope="row"
                                                             >
-                                                                Full Name :
+                                                                ID Number :
                                                             </th>
                                                             <td
                                                                 class="text-muted"
                                                             >
-                                                                Anna Adame
+                                                                {{
+                                                                    employee.id_number
+                                                                }}
                                                             </td>
                                                         </tr>
                                                         <tr>
@@ -161,14 +157,17 @@ export default {
                                                                 class="ps-0"
                                                                 scope="row"
                                                             >
-                                                                Mobile :
+                                                                Full Name :
                                                             </th>
                                                             <td
                                                                 class="text-muted"
                                                             >
-                                                                +(1) 987 6543
+                                                                {{
+                                                                    employee.name
+                                                                }}
                                                             </td>
                                                         </tr>
+
                                                         <tr>
                                                             <th
                                                                 class="ps-0"
@@ -179,7 +178,9 @@ export default {
                                                             <td
                                                                 class="text-muted"
                                                             >
-                                                                daveadame@velzon.com
+                                                                {{
+                                                                    employee.email
+                                                                }}
                                                             </td>
                                                         </tr>
                                                         <tr>
@@ -192,21 +193,9 @@ export default {
                                                             <td
                                                                 class="text-muted"
                                                             >
-                                                                California,
-                                                                United States
-                                                            </td>
-                                                        </tr>
-                                                        <tr>
-                                                            <th
-                                                                class="ps-0"
-                                                                scope="row"
-                                                            >
-                                                                Joining Date
-                                                            </th>
-                                                            <td
-                                                                class="text-muted"
-                                                            >
-                                                                24 Nov 2021
+                                                                {{
+                                                                    employee.location
+                                                                }}
                                                             </td>
                                                         </tr>
                                                     </tbody>
@@ -335,33 +324,7 @@ export default {
                                                 About
                                             </h5>
                                             <p>
-                                                Hi I'm Anna Adame, It will be as
-                                                simple as Occidental; in fact,
-                                                it will be Occidental. To an
-                                                English person, it will seem
-                                                like simplified English, as a
-                                                skeptical Cambridge friend of
-                                                mine told me what Occidental is
-                                                European languages are members
-                                                of the same family.
-                                            </p>
-                                            <p>
-                                                You always want to make sure
-                                                that your fonts work well
-                                                together and try to limit the
-                                                number of fonts you use to three
-                                                or less. Experiment and play
-                                                around with the fonts that you
-                                                already have in the software
-                                                you’re working with reputable
-                                                font websites. This may be the
-                                                most commonly encountered tip I
-                                                received from the designers I
-                                                spoke with. They highly
-                                                encourage that you use different
-                                                fonts in one design, but do not
-                                                over-exaggerate and go
-                                                overboard.
+                                                {{ employee.about }}
                                             </p>
                                             <BRow>
                                                 <BCol cols="6" md="4">
@@ -386,36 +349,10 @@ export default {
                                                             <h6
                                                                 class="text-truncate mb-0"
                                                             >
-                                                                Lead Designer /
-                                                                Developer
+                                                                {{
+                                                                    employee.designation
+                                                                }}
                                                             </h6>
-                                                        </div>
-                                                    </div>
-                                                </BCol>
-                                                <BCol cols="6" md="4">
-                                                    <div class="d-flex mt-4">
-                                                        <div
-                                                            class="flex-shrink-0 avatar-xs align-self-center me-3"
-                                                        >
-                                                            <div
-                                                                class="avatar-title bg-light rounded-circle fs-16 text-primary"
-                                                            >
-                                                                <i
-                                                                    class="ri-global-line"
-                                                                ></i>
-                                                            </div>
-                                                        </div>
-                                                        <div
-                                                            class="flex-grow-1 overflow-hidden"
-                                                        >
-                                                            <p class="mb-1">
-                                                                Website :
-                                                            </p>
-                                                            <BLink
-                                                                href="#"
-                                                                class="fw-semibold"
-                                                                >www.velzon.com</BLink
-                                                            >
                                                         </div>
                                                     </div>
                                                 </BCol>

@@ -226,7 +226,7 @@ export default {
                 </li>
                 <li class="nav-item">
                     <Link
-                        href="/dashboard"
+                        href="/"
                         class="nav-link"
                         data-key="t-crm"
                     >
@@ -260,20 +260,11 @@ export default {
                             </li>
                             <li class="nav-item">
                                 <Link
-                                    href="/pages/profile"
-                                    class="nav-link"
-                                    data-key="t-simple-page"
-                                >
-                                    {{ $t("t-simple-page") }}
-                                </Link>
-                            </li>
-                            <li class="nav-item">
-                                <Link
-                                    href="/pages/profile-setting"
+                                    href="/leave/list"
                                     class="nav-link"
                                     data-key="t-settings"
                                 >
-                                    {{ $t("t-settings") }}
+                                    Leave List
                                 </Link>
                             </li>
                         </ul>

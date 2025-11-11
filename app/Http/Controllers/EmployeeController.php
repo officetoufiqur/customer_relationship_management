@@ -98,36 +98,69 @@ class EmployeeController extends Controller
         return redirect()->back()->with('success', 'Employee updated successfully.');
     }
 
-   public function employeeProfile($id)
-{
-    $user = User::with('employee')->findOrFail($id);
-    $employee = $user->employee;
+    public function employeeProfile($id)
+    {
+        $user = User::with('employee')->findOrFail($id);
+        $employee = $user->employee;
 
-    // Base user data
-    $employeeData = [
-        'id' => $user->id,
-        'name' => $user->name,
-        'email' => $user->email,
-        'id_number' => $employee->id_number ?? null,
-        'position' => $employee->position ?? null,
-        'department' => $employee->department ?? null,
-        'employ_status' => $employee->employ_status ?? null,
-        'salary' => $employee->salary ?? null,
-        'allowances' => $employee->allowances ?? null,
-        'deductions' => $employee->deductions ?? null,
-        'annual_leave_balance' => $employee->annual_leave_balance ?? 0,
-        'sick_leave_balance' => $employee->sick_leave_balance ?? 0,
-        'location' => $employee->location ?? null,
-        'about' => $employee->about ?? null,
-        'skills' => $employee->skills ?? null,
-        'socials' => $employee->socials ?? null,
-        'image' => $employee->image ?? null,
-        'cover_photo' => $employee->cover_photo ?? null,
-    ];
+        // Base user data
+        $employeeData = [
+            'id' => $user->id,
+            'name' => $user->name,
+            'email' => $user->email,
+            'id_number' => $employee->id_number ?? null,
+            'position' => $employee->position ?? null,
+            'department' => $employee->department ?? null,
+            'employ_status' => $employee->employ_status ?? null,
+            'salary' => $employee->salary ?? null,
+            'allowances' => $employee->allowances ?? null,
+            'deductions' => $employee->deductions ?? null,
+            'annual_leave_balance' => $employee->annual_leave_balance ?? 0,
+            'sick_leave_balance' => $employee->sick_leave_balance ?? 0,
+            'location' => $employee->location ?? null,
+            'about' => $employee->about ?? null,
+            'skills' => $employee->skills ?? null,
+            'socials' => $employee->socials ?? null,
+            'image' => $employee->image ?? null,
+            'cover_photo' => $employee->cover_photo ?? null,
+            'created_at' => $user->created_at ?? null,
+        ];
 
-    return Inertia::render('Employee/Profile', [
-        'employee' => $employeeData,
-    ]);
-}
+        return Inertia::render('Employee/Profile', [
+            'employee' => $employeeData,
+        ]);
+    }
 
+    public function pages_profile_setting($id)
+    {
+         $user = User::with('employee')->findOrFail($id);
+        $employee = $user->employee;
+
+        // Base user data
+        $employeeData = [
+            'id' => $user->id,
+            'name' => $user->name,
+            'email' => $user->email,
+            'id_number' => $employee->id_number ?? null,
+            'position' => $employee->position ?? null,
+            'department' => $employee->department ?? null,
+            'employ_status' => $employee->employ_status ?? null,
+            'salary' => $employee->salary ?? null,
+            'allowances' => $employee->allowances ?? null,
+            'deductions' => $employee->deductions ?? null,
+            'annual_leave_balance' => $employee->annual_leave_balance ?? 0,
+            'sick_leave_balance' => $employee->sick_leave_balance ?? 0,
+            'location' => $employee->location ?? null,
+            'about' => $employee->about ?? null,
+            'skills' => $employee->skills ?? null,
+            'socials' => $employee->socials ?? null,
+            'image' => $employee->image ?? null,
+            'cover_photo' => $employee->cover_photo ?? null,
+            'created_at' => $user->created_at ?? null,
+        ];
+
+        return Inertia::render('Employee/Setting', [
+            'employee' => $employeeData,
+        ]);
+    }
 }

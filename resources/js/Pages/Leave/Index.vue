@@ -4,10 +4,6 @@ import PageHeader from "@/Components/page-header.vue";
 import { ref, reactive, computed } from "vue";
 import { router, useForm } from "@inertiajs/vue3";
 
-const props = defineProps({
-    users: Array,
-});
-
 //======= create user modal =======
 const userListModal = ref(false);
 const dataEdit = ref(false);
@@ -90,66 +86,12 @@ const toggleEditModal = (user) => {
 
 
 // ===== PAGINATION + SORTING =====
-const search = ref("");
-const sortKey = ref("id");
-const sortOrder = ref("asc");
-const page = ref(1);
-const perPage = ref(5);
 
-const filteredUsers = computed(() =>
-    props.users.filter(
-        (user) =>
-            user.name.toLowerCase().includes(search.value.toLowerCase()) ||
-            user.email.toLowerCase().includes(search.value.toLowerCase())
-    )
-);
-
-const sortedUsers = computed(() => {
-    return [...filteredUsers.value].sort((a, b) => {
-        const valA = a[sortKey.value]?.toString().toLowerCase();
-        const valB = b[sortKey.value]?.toString().toLowerCase();
-
-        if (valA < valB) return sortOrder.value === "asc" ? -1 : 1;
-        if (valA > valB) return sortOrder.value === "asc" ? 1 : -1;
-        return 0;
-    });
-});
-
-const totalPages = computed(() =>
-    Math.ceil(sortedUsers.value.length / perPage.value)
-);
-
-const paginatedUsers = computed(() => {
-    const start = (page.value - 1) * perPage.value;
-    const end = start + perPage.value;
-    return sortedUsers.value.slice(start, end);
-});
-
-const sortBy = (key) => {
-    if (sortKey.value === key) {
-        sortOrder.value = sortOrder.value === "asc" ? "desc" : "asc";
-    } else {
-        sortKey.value = key;
-        sortOrder.value = "asc";
-    }
-};
-
-const pages = computed(() => {
-    const arr = [];
-    for (let i = 1; i <= totalPages.value; i++) {
-        arr.push(i);
-    }
-    return arr;
-});
-
-const viewEmployee = (user) => {
-    router.visit(`/employee/profile/${user.id}`);
-};
 </script>
 
 <template>
     <Layout>
-        <PageHeader title="All Users" pageTitle="Users" />
+        <PageHeader title="All Leave" pageTitle="Leave" />
 
         <BRow>
             <BCol lg="12">
@@ -157,7 +99,7 @@ const viewEmployee = (user) => {
                     <BCardHeader class="border-0">
                         <div class="d-flex align-items-center">
                             <h5 class="card-title mb-0 flex-grow-1">
-                                All users
+                                All Leave
                             </h5>
                             <div class="flex-shrink-0">
                                 <div class="d-flex flex-wrap gap-2">
@@ -176,7 +118,7 @@ const viewEmployee = (user) => {
                                         <i
                                             class="ri-add-line align-bottom me-1"
                                         ></i>
-                                        Create user
+                                        Create Leave
                                     </BButton>
                                 </div>
                             </div>
@@ -332,10 +274,7 @@ const viewEmployee = (user) => {
                                     </tr>
                                 </thead>
                                 <tbody class="list form-check-all">
-                                    <tr
-                                        v-for="(user, index) in paginatedUsers"
-                                        :key="index"
-                                    >
+                                    <tr>
                                         <th scope="row">
                                             <div class="form-check">
                                                 <input
@@ -344,12 +283,12 @@ const viewEmployee = (user) => {
                                                 />
                                             </div>
                                         </th>
-                                        <td>{{ user.id }}</td>
-                                        <td>{{ user.name }}</td>
-                                        <td>{{ user.email }}</td>
-                                        <td>{{ user.position }}</td>
-                                        <td>{{ user.department }}</td>
-                                        <td>{{ user.salary }}</td>
+                                        <td>dfdf</td>
+                                        <td>dsfsd</td>
+                                        <td>sdfds</td>
+                                        <td>sdfds</td>
+                                        <td>sdfds</td>
+                                        <td>dfs</td>
                                         <td class="d-flex gap-2">
                                             <BButton
                                                 variant="danger px-3"
@@ -371,9 +310,7 @@ const viewEmployee = (user) => {
                             </table>
 
                             <div
-                                class="noresult"
-                                v-if="paginatedUsers.length < 1"
-                            >
+                                class="noresult">
                                 <div class="text-center p-4">
                                     <h5 class="mt-2">Sorry! No Result Found</h5>
                                     <p class="text-muted mb-0">

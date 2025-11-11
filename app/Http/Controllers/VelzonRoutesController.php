@@ -11,7 +11,7 @@ class VelzonRoutesController extends Controller
 
     public function dashboard()
     {
-        return Inertia::render('dashboard/ecommerce/index');
+        return Inertia::render('dashboard/crm/index');
     }
 
     public function dashboard_analytics()
@@ -727,9 +727,9 @@ class VelzonRoutesController extends Controller
         return Inertia::render('auth-pages/success-msg/cover');
     }
 
-    public function maps_amcharts() {
-        return Inertia::render('maps/amcharts/index');
-    }
+    // public function maps_amcharts() {
+    //     return Inertia::render('maps/amcharts/index');
+    // }
 
     public function maps_google() {
         return Inertia::render('maps/google');
