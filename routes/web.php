@@ -27,6 +27,9 @@ Route::middleware(['auth:sanctum', config('jetstream.auth_session'), 'verified',
 
      Route::controller(LeaveController::class)->group(function () {
         Route::get('/leave/list', 'index')->name('leave.list');
+        Route::post('/leave/store', 'store')->name('leave.store');
+        Route::post('/leave/update/{id}', 'update')->name('leave.update');
+        Route::put('/leave/update/status/{id}', 'updateStatus')->name('leave.update.status');
     });
 
     Route::controller(VelzonRoutesController::class)->group(function () {

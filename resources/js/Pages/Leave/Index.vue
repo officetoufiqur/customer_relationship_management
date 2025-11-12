@@ -1,13 +1,15 @@
 <script setup>
 import Layout from "@/Layouts/main.vue";
 import PageHeader from "@/Components/page-header.vue";
-import { ref, reactive, computed } from "vue";
+import { ref, reactive, computed, onMounted, watch, nextTick } from "vue";
 import { router, useForm } from "@inertiajs/vue3";
+import $ from "jquery";
 
 const props = defineProps({
     leaves: Array,
 });
 
+const leaveData = props.leaves;
 //======= create leave modal =======
 const leaveListModal = ref(false);
 const dataEdit = ref(false);
@@ -20,61 +22,102 @@ const toggleModal = () => {
 
 // form models
 const form = useForm({
-    employe_id: "",
+    user_id: "",
     leave_type: "",
     reason: "",
     status: "",
     start_date: "",
     end_date: "",
     is_medical: "",
-    medical_excuse_fil: "",
+    medical_excuse_file: null,
 });
 
 const editForm = useForm({
-    employe_id: "",
     leave_type: "",
     reason: "",
-    status: "",
     start_date: "",
     end_date: "",
     is_medical: "",
-    medical_excuse_fil: "",
+    medical_excuse_file: null,
 });
 
+// handle file upload for both create and edit forms
+const handleFileUpload = (e, isEdit = false) => {
+    const file = e.target.files && e.target.files[0] ? e.target.files[0] : null;
+    form.medical_excuse_file = file;
+};
+
+const handleEditFileUpload = (e) => {
+    editForm.medical_excuse_file = e.target.files[0];
+};
+
+const handleUpdateSubmit = () => {
+    editForm.post(`/leave/update/${dataEdit.value.id}`, {
+        onSuccess: () => {
+            console.log("leave updated successfully");
+            leaveEditListModal.value = false;
+            editForm.reset();
+        },
+    });
+};
 const handleSubmit = () => {
-    if (dataEdit.value) {
-        editForm.put(`/leave/update/${dataEdit.value.id}`, {
-            onSuccess: () => {
-                console.log("leave updated successfully");
-                leaveEditListModal.value = false;
-                editForm.reset();
-            },
-        });
-    } else {
-        form.post("/leave/store", {
-            onSuccess: () => {
-                console.log("leave added successfully");
-                leaveListModal.value = false;
-                form.reset();
-            },
-        });
-    }
+    form.post("/leave/store", {
+        onSuccess: () => {
+            console.log("leave added successfully");
+            leaveListModal.value = false;
+            form.reset();
+        },
+    });
 };
 
 // ===== edit leave modal =====
 const leaveEditListModal = ref(false);
 
+const closeModal = () => {
+    leaveEditListModal.value = false;
+    leaveListModal.value = false;
+    leaveViewModal.value = false;
+};
+
 const toggleEditModal = (leave) => {
     dataEdit.value = leave;
-    editForm.employe_id = leave.employe_id || "";
+    editForm.user_id = leave.user_id || "";
     editForm.leave_type = leave.leave_type || "";
     editForm.reason = leave.reason || "";
     editForm.status = leave.status || "";
     editForm.start_date = leave.start_date || "";
     editForm.end_date = leave.end_date || "";
-    editForm.is_medical = leave.is_medical || "";
-    editForm.medical_excuse_fil = leave.medical_excuse_fil || "";
+    editForm.is_medical = leave.is_medical == 1 || leave.is_medical === true;
+    editForm.medical_excuse_file = leave.medical_excuse_file || null;
     leaveEditListModal.value = true;
+};
+
+const handleStatusUpdateSubmit = () => {
+    viewForm.put(`/leave/update/status/${dataEdit.value.id}`, {
+        onSuccess: () => {
+            leaveViewModal.value = false;
+        },
+    });
+};
+
+// ===== View leave modal =====
+const leaveViewModal = ref(false);
+
+const viewForm = useForm({
+    status: "",
+});
+
+const toggleViewModal = (leave) => {
+    dataEdit.value = leave;
+    editForm.user_id = leave.user_id || "";
+    editForm.leave_type = leave.leave_type || "";
+    editForm.reason = leave.reason || "";
+    editForm.status = leave.status || "";
+    editForm.start_date = leave.start_date || "";
+    editForm.end_date = leave.end_date || "";
+    editForm.is_medical = leave.is_medical == 1 || leave.is_medical === true;
+    editForm.medical_excuse_file = leave.medical_excuse_file || null;
+    leaveViewModal.value = true;
 };
 
 // ===== PAGINATION + SORTING =====
@@ -85,10 +128,8 @@ const page = ref(1);
 const perPage = ref(5);
 
 const filteredleaves = computed(() =>
-    props.leaves.filter(
-        (leave) =>
-            leave.name.toLowerCase().includes(search.value.toLowerCase()) ||
-            leave.email.toLowerCase().includes(search.value.toLowerCase())
+    props.leaves.filter((leave) =>
+        leave.leave_type.toLowerCase().includes(search.value.toLowerCase())
     )
 );
 
@@ -130,9 +171,40 @@ const pages = computed(() => {
     return arr;
 });
 
-const viewEmployee = (leave) => {
-    router.visit(`/employee/profile/${leave.id}`);
+// ===== dropify =====
+watch(
+    () => form.is_medical,
+    (newVal) => {
+        if (newVal) {
+            setTimeout(() => initDropify(), 100);
+        }
+    }
+);
+
+watch(
+    () => editForm.is_medical,
+    (newVal) => {
+        if (newVal) {
+            setTimeout(() => initDropify(), 100);
+        }
+    }
+);
+
+const initDropify = () => {
+    $(".dropify").dropify({
+        defaultFile: editForm.medical_excuse_file || "",
+        messages: {
+            default: "Drag and drop a file here or click",
+            replace: "Drag and drop or click to replace",
+            remove: "Remove",
+            error: "Oops, something went wrong.",
+        },
+    });
 };
+
+onMounted(() => {
+    initDropify();
+});
 </script>
 
 <template>
@@ -211,15 +283,6 @@ const viewEmployee = (leave) => {
                             >
                                 <thead class="table-light text-muted">
                                     <tr>
-                                        <th scope="col" style="width: 40px">
-                                            <div class="form-check">
-                                                <input
-                                                    class="form-check-input"
-                                                    type="checkbox"
-                                                    id="checkAll"
-                                                />
-                                            </div>
-                                        </th>
                                         <th
                                             @click="sortBy('id')"
                                             style="cursor: pointer"
@@ -253,14 +316,14 @@ const viewEmployee = (leave) => {
                                             ></i>
                                         </th>
                                         <th
-                                            @click="sortBy('email')"
+                                            @click="sortBy('leave_type')"
                                             style="cursor: pointer"
                                         >
-                                            Email
+                                            Leave Type
                                             <i
                                                 :class="[
                                                     'ms-1',
-                                                    sortKey === 'email'
+                                                    sortKey === 'leave_type'
                                                         ? sortOrder === 'asc'
                                                             ? 'bx bxs-sort-alt'
                                                             : 'bx bxs-sort-alt'
@@ -269,14 +332,14 @@ const viewEmployee = (leave) => {
                                             ></i>
                                         </th>
                                         <th
-                                            @click="sortBy('position')"
+                                            @click="sortBy('start_date')"
                                             style="cursor: pointer"
                                         >
-                                            Position
+                                            Start Date
                                             <i
                                                 :class="[
                                                     'ms-1',
-                                                    sortKey === 'position'
+                                                    sortKey === 'start_date'
                                                         ? sortOrder === 'asc'
                                                             ? 'bx bxs-sort-alt'
                                                             : 'bx bxs-sort-alt'
@@ -285,14 +348,14 @@ const viewEmployee = (leave) => {
                                             ></i>
                                         </th>
                                         <th
-                                            @click="sortBy('department')"
+                                            @click="sortBy('end_date')"
                                             style="cursor: pointer"
                                         >
-                                            Department
+                                            End Date
                                             <i
                                                 :class="[
                                                     'ms-1',
-                                                    sortKey === 'department'
+                                                    sortKey === 'end_date'
                                                         ? sortOrder === 'asc'
                                                             ? 'bx bxs-sort-alt'
                                                             : 'bx bxs-sort-alt'
@@ -301,14 +364,14 @@ const viewEmployee = (leave) => {
                                             ></i>
                                         </th>
                                         <th
-                                            @click="sortBy('salary')"
+                                            @click="sortBy('status')"
                                             style="cursor: pointer"
                                         >
-                                            Salary
+                                            Status
                                             <i
                                                 :class="[
                                                     'ms-1',
-                                                    sortKey === 'salary'
+                                                    sortKey === 'status'
                                                         ? sortOrder === 'asc'
                                                             ? 'bx bxs-sort-alt'
                                                             : 'bx bxs-sort-alt'
@@ -326,20 +389,43 @@ const viewEmployee = (leave) => {
                                         ) in paginatedleaves"
                                         :key="index"
                                     >
-                                        <th scope="row">
-                                            <div class="form-check">
-                                                <input
-                                                    class="form-check-input"
-                                                    type="checkbox"
-                                                />
-                                            </div>
-                                        </th>
                                         <td>{{ leave.id }}</td>
-                                        <td>{{ leave.name }}</td>
-                                        <td>{{ leave.email }}</td>
-                                        <td>{{ leave.position }}</td>
-                                        <td>{{ leave.department }}</td>
-                                        <td>{{ leave.salary }}</td>
+                                        <td>{{ leave.user.name }}</td>
+                                        <td>{{ leave.leave_type }}</td>
+                                        <td>
+                                            {{
+                                                new Date(
+                                                    leave.start_date
+                                                ).toLocaleDateString("en-US", {
+                                                    year: "numeric",
+                                                    month: "short",
+                                                    day: "numeric",
+                                                })
+                                            }}
+                                        </td>
+                                        <td>
+                                            {{
+                                                new Date(
+                                                    leave.end_date
+                                                ).toLocaleDateString("en-US", {
+                                                    year: "numeric",
+                                                    month: "short",
+                                                    day: "numeric",
+                                                })
+                                            }}
+                                        </td>
+                                        <td>
+                                            <BButton v-if="leave.status == 'approved'"
+                                                variant="success px-3 py-1"
+                                                class="add-btn">
+                                                {{ leave.status }}
+                                            </BButton>
+                                            <BButton v-if="leave.status == 'reject'"
+                                                variant="danger px-3 py-1"
+                                                class="add-btn">
+                                                {{ leave.status }}
+                                            </BButton>
+                                        </td>
                                         <td class="d-flex gap-2">
                                             <BButton
                                                 variant="danger px-3"
@@ -350,8 +436,8 @@ const viewEmployee = (leave) => {
                                             </BButton>
                                             <BButton
                                                 variant="info px-3"
-                                                size="sm"
-                                                @click="viewEmployee(leave)"
+                                                class="add-btn"
+                                                @click="toggleViewModal(leave)"
                                             >
                                                 View
                                             </BButton>
@@ -452,7 +538,6 @@ const viewEmployee = (leave) => {
                         </div>
                     </BCol>
 
-
                     <!-- Start Date -->
                     <BCol lg="6">
                         <label for="start_date" class="form-label"
@@ -517,8 +602,9 @@ const viewEmployee = (leave) => {
                         <input
                             type="file"
                             id="medical_excuse_file"
-                            class="form-control"
-                            @change="handleFileUpload"
+                            class="dropify"
+                            data-height="150"
+                            @change="handleFileUpload($event, false)"
                         />
                     </BCol>
 
@@ -565,143 +651,247 @@ const viewEmployee = (leave) => {
         >
             <BForm id="editform" class="tablelist-form" autocomplete="off">
                 <BRow class="g-3">
-                    <!-- ID Number -->
+                    <!-- Leave Type -->
                     <BCol lg="6">
-                        <label for="edit-id-number" class="form-label"
-                            >ID Number</label
-                        >
-                        <input
-                            type="text"
-                            id="edit-id-number"
-                            class="form-control"
-                            placeholder="Enter employee ID number"
-                            v-model="editForm.id_number"
-                        />
-                    </BCol>
-
-                    <!-- Position -->
-                    <BCol lg="6">
-                        <label for="edit-position" class="form-label"
-                            >Position</label
-                        >
-                        <input
-                            type="text"
-                            id="edit-position"
-                            class="form-control"
-                            placeholder="Enter position"
-                            v-model="editForm.position"
-                        />
-                    </BCol>
-
-                    <!-- Department -->
-                    <BCol lg="6">
-                        <label for="edit-department" class="form-label"
-                            >Department</label
-                        >
-                        <input
-                            type="text"
-                            id="edit-department"
-                            class="form-control"
-                            placeholder="Enter department"
-                            v-model="editForm.department"
-                        />
-                    </BCol>
-
-                    <!-- Employment Status -->
-                    <BCol lg="6">
-                        <label for="edit-employ-status" class="form-label"
-                            >Employment Status</label
+                        <label for="leave_type" class="form-label"
+                            >Leave Type</label
                         >
                         <select
-                            id="edit-employ-status"
+                            id="leave_type"
                             class="form-select shadow-none"
-                            v-model="editForm.employ_status"
+                            v-model="editForm.leave_type"
                         >
-                            <option value="">Select status</option>
-                            <option value="Full-time">Full-time</option>
-                            <option value="Part-time">Part-time</option>
-                            <option value="Contract">Contract</option>
-                            <option value="Intern">Intern</option>
+                            <option value="">Select Type</option>
+                            <option value="annual">Annual</option>
+                            <option value="sick">Sick</option>
+                            <option value="emergency">Emergency</option>
                         </select>
+                        <div
+                            class="invalid-feedback"
+                            v-if="submitted && !form.leave_type"
+                        >
+                            Please select a leave type.
+                        </div>
                     </BCol>
 
-                    <!-- Salary -->
+                    <!-- Start Date -->
                     <BCol lg="6">
-                        <label for="edit-salary" class="form-label"
-                            >Salary</label
+                        <label for="start_date" class="form-label"
+                            >Start Date</label
                         >
                         <input
-                            type="number"
-                            id="edit-salary"
+                            type="date"
+                            id="start_date"
                             class="form-control"
-                            placeholder="Enter salary amount"
-                            v-model="editForm.salary"
+                            v-model="editForm.start_date"
+                            :class="{
+                                'is-invalid': submitted && !form.start_date,
+                            }"
+                        />
+                        <div class="invalid-feedback">
+                            Please select start date.
+                        </div>
+                    </BCol>
+
+                    <!-- End Date -->
+                    <BCol lg="6">
+                        <label for="end_date" class="form-label"
+                            >End Date</label
+                        >
+                        <input
+                            type="date"
+                            id="end_date"
+                            class="form-control"
+                            v-model="editForm.end_date"
+                            :class="{
+                                'is-invalid': submitted && !form.end_date,
+                            }"
+                        />
+                        <div class="invalid-feedback">
+                            Please select end date.
+                        </div>
+                    </BCol>
+
+                    <!-- Is Medical -->
+                    <BCol lg="6">
+                        <label class="form-label d-block"
+                            >Is Medical Leave?</label
+                        >
+                        <div class="form-check form-switch">
+                            <input
+                                class="form-check-input"
+                                type="checkbox"
+                                id="is_medical"
+                                v-model="editForm.is_medical"
+                            />
+                            <label class="form-check-label" for="is_medical">
+                                {{ editForm.is_medical ? "Yes" : "No" }}
+                            </label>
+                        </div>
+                    </BCol>
+
+                    <!-- Medical File Upload -->
+                    <BCol lg="12" v-if="editForm.is_medical">
+                        <label for="medical_excuse_file" class="form-label"
+                            >Medical Excuse File</label
+                        >
+                        <input
+                            type="file"
+                            id="medical_excuse_file"
+                            class="dropify"
+                            data-height="150"
+                            @change="handleEditFileUpload($event, false)"
                         />
                     </BCol>
 
-                    <!-- Allowances -->
-                    <BCol lg="6">
-                        <label for="edit-allowances" class="form-label"
-                            >Allowances</label
-                        >
-                        <input
-                            type="number"
-                            id="edit-allowances"
+                    <!-- Reason -->
+                    <BCol lg="12">
+                        <label for="reason" class="form-label">Reason</label>
+                        <textarea
+                            id="reason"
                             class="form-control"
-                            placeholder="Enter allowances amount"
-                            v-model="editForm.allowances"
-                        />
-                    </BCol>
-
-                    <!-- Annual Leave Balance -->
-                    <BCol lg="6">
-                        <label for="edit-annual-leave" class="form-label"
-                            >Annual Leave Balance</label
-                        >
-                        <input
-                            type="number"
-                            id="edit-annual-leave"
-                            class="form-control"
-                            placeholder="Enter annual leave days"
-                            v-model="editForm.annual_leave_balance"
-                        />
-                    </BCol>
-
-                    <!-- Sick Leave Balance -->
-                    <BCol lg="6">
-                        <label for="edit-sick-leave" class="form-label"
-                            >Sick Leave Balance</label
-                        >
-                        <input
-                            type="number"
-                            id="edit-sick-leave"
-                            class="form-control"
-                            placeholder="Enter sick leave days"
-                            v-model="editForm.sick_leave_balance"
-                        />
+                            rows="3"
+                            placeholder="Enter reason for leave"
+                            v-model="editForm.reason"
+                        ></textarea>
                     </BCol>
                 </BRow>
 
                 <!-- Modal Footer -->
                 <div class="hstack gap-2 justify-content-end mt-3">
-                    <BButton
-                        type="button"
-                        variant="light"
-                        @click="leaveEditListModal = false"
-                        id="closemodal"
-                    >
+                    <BButton type="button" variant="light" @click="closeModal">
                         Close
                     </BButton>
                     <BButton
                         type="submit"
                         variant="success"
-                        id="edit-btn"
-                        @click="handleSubmit"
+                        @click="handleUpdateSubmit"
                     >
-                        Update
+                        {{ dataEdit ? "Update" : "Add Leave" }}
+                    </BButton>
+                </div>
+            </BForm>
+        </BModal>
+
+        <!-- View leave modal -->
+        <BModal
+            v-model="leaveViewModal"
+            id="editmodal"
+            modal-class="zoomIn"
+            hide-footer
+            header-class="p-3 bg-info-subtle leaveModal"
+            class="v-modal-custom"
+            centered
+            size="lg"
+            :title="'View leave'"
+        >
+            <BRow class="g-3">
+                <!-- Leave Type -->
+                <BCol lg="6">
+                    <label for="leave_type" class="form-label"
+                        >Leave Type</label
+                    >
+                    <div class="form-control">
+                        {{ editForm.leave_type }}
+                    </div>
+                </BCol>
+
+                <!-- Start Date -->
+                <BCol lg="6">
+                    <label for="start_date" class="form-label"
+                        >Start Date</label
+                    >
+                    <div class="form-control">
+                        {{ editForm.start_date }}
+                    </div>
+                </BCol>
+
+                <!-- End Date -->
+                <BCol lg="6">
+                    <label for="end_date" class="form-label">End Date</label>
+                    <div class="form-control">
+                        {{ editForm.end_date }}
+                    </div>
+                </BCol>
+
+                <!-- Is Medical -->
+                <BCol lg="6">
+                    <label class="form-label d-block">Is Medical Leave?</label>
+                    <div class="form-control">
+                        {{ editForm.is_medical ? "Yes" : "No" }}
+                    </div>
+                </BCol>
+
+                <!-- Medical File Upload -->
+                <BCol lg="12" v-if="editForm.is_medical">
+                    <label for="medical_excuse_file" class="form-label"
+                        >Medical Excuse File</label
+                    >
+                    <div class="form-control text-center">
+                        <img
+                            :src="editForm.medical_excuse_file"
+                            alt=""
+                            class="w-25 rounded"
+                        />
+                    </div>
+                </BCol>
+
+                <!-- Reason -->
+                <BCol lg="12">
+                    <label for="reason" class="form-label">Reason</label>
+                    <div class="form-control">
+                        {{ editForm.reason }}
+                    </div>
+                </BCol>
+            </BRow>
+
+            <BForm id="editform" class="tablelist-form mt-3" autocomplete="off">
+                <BCol lg="6">
+                    <label for="status" class="form-label">Status</label>
+                    <select
+                        id="leave_type"
+                        class="form-select shadow-none cursor-pointer"
+                        v-model="viewForm.status"
+                    >
+                        <option selected>Select Type</option>
+                        <option value="approved">Approved</option>
+                        <option value="reject">Rejected</option>
+                    </select>
+                    <div
+                        class="invalid-feedback"
+                        v-if="submitted && !form.status"
+                    >
+                        Please select a leave type.
+                    </div>
+                </BCol>
+
+                <!-- Modal Footer -->
+                <div class="hstack gap-2 justify-content-end mt-3">
+                    <BButton type="button" variant="light" @click="closeModal">
+                        Close
+                    </BButton>
+                    <BButton
+                        type="submit"
+                        variant="success"
+                        @click="handleStatusUpdateSubmit"
+                    >
+                        {{ dataEdit ? "Update Status" : "Add Leave" }}
                     </BButton>
                 </div>
             </BForm>
         </BModal>
     </Layout>
 </template>
+
+<style>
+.dropify-wrapper .dropify-preview .dropify-render img {
+    width: 100% !important;
+    height: auto !important;
+    object-fit: contain;
+}
+
+.dropify-wrapper .dropify-message p {
+    font-size: 16px;
+    text-align: center;
+}
+</style>

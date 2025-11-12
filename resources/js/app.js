@@ -13,6 +13,12 @@ import VueApexCharts from "vue3-apexcharts";
 import VueFeather from 'vue-feather';
 import VueTheMask from 'vue-the-mask';
 
+import 'dropify/dist/css/dropify.min.css';
+import 'dropify/dist/js/dropify.min.js';
+import $ from 'jquery';
+window.$ = $;
+
+
 import AOS from 'aos';
 import 'aos/dist/aos.css';
 
