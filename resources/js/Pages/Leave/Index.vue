@@ -4,89 +4,135 @@ import PageHeader from "@/Components/page-header.vue";
 import { ref, reactive, computed } from "vue";
 import { router, useForm } from "@inertiajs/vue3";
 
-//======= create user modal =======
-const userListModal = ref(false);
+const props = defineProps({
+    leaves: Array,
+});
+
+//======= create leave modal =======
+const leaveListModal = ref(false);
 const dataEdit = ref(false);
 const submitted = ref(false);
 
 const toggleModal = () => {
     dataEdit.value = false;
-    userListModal.value = true;
+    leaveListModal.value = true;
 };
 
 // form models
 const form = useForm({
-    name: "",
-    email: "",
-    password: "",
-    id_number: "",
-    position: "",
-    department: "",
-    employ_status: "",
-    salary: "",
-    allowances: "",
-    deductions: "",
-    annual_leave_balance: "",
-    sick_leave_balance: "",
+    employe_id: "",
+    leave_type: "",
+    reason: "",
+    status: "",
+    start_date: "",
+    end_date: "",
+    is_medical: "",
+    medical_excuse_fil: "",
 });
 
 const editForm = useForm({
-    name: "",
-    email: "",
-    password: "",
-    id_number: "",
-    position: "",
-    department: "",
-    employ_status: "",
-    salary: "",
-    allowances: "",
-    deductions: "",
-    annual_leave_balance: "",
-    sick_leave_balance: "",
+    employe_id: "",
+    leave_type: "",
+    reason: "",
+    status: "",
+    start_date: "",
+    end_date: "",
+    is_medical: "",
+    medical_excuse_fil: "",
 });
 
 const handleSubmit = () => {
     if (dataEdit.value) {
-        // Update existing user
-        editForm.put(`/employees/update/${dataEdit.value.id}`, {
+        editForm.put(`/leave/update/${dataEdit.value.id}`, {
             onSuccess: () => {
-                console.log("User updated successfully");
-                userEditListModal.value = false;
+                console.log("leave updated successfully");
+                leaveEditListModal.value = false;
                 editForm.reset();
             },
         });
     } else {
-        // Create new user
-        form.post("/employees/store", {
+        form.post("/leave/store", {
             onSuccess: () => {
-                console.log("User added successfully");
-                userListModal.value = false;
+                console.log("leave added successfully");
+                leaveListModal.value = false;
                 form.reset();
             },
         });
     }
 };
 
-// ===== edit user modal =====
-const userEditListModal = ref(false);
+// ===== edit leave modal =====
+const leaveEditListModal = ref(false);
 
-const toggleEditModal = (user) => {
-    dataEdit.value = user; 
-    editForm.id_number = user.id_number || "";
-    editForm.position = user.position || "";
-    editForm.department = user.department || "";
-    editForm.employ_status = user.employ_status || "";
-    editForm.salary = user.salary || "";
-    editForm.allowances = user.allowances || "";
-    editForm.deductions = user.deductions || "";
-    editForm.annual_leave_balance = user.annual_leave_balance || "";
-    editForm.sick_leave_balance = user.sick_leave_balance || "";
-    userEditListModal.value = true; 
+const toggleEditModal = (leave) => {
+    dataEdit.value = leave;
+    editForm.employe_id = leave.employe_id || "";
+    editForm.leave_type = leave.leave_type || "";
+    editForm.reason = leave.reason || "";
+    editForm.status = leave.status || "";
+    editForm.start_date = leave.start_date || "";
+    editForm.end_date = leave.end_date || "";
+    editForm.is_medical = leave.is_medical || "";
+    editForm.medical_excuse_fil = leave.medical_excuse_fil || "";
+    leaveEditListModal.value = true;
 };
 
-
 // ===== PAGINATION + SORTING =====
+const search = ref("");
+const sortKey = ref("id");
+const sortOrder = ref("asc");
+const page = ref(1);
+const perPage = ref(5);
 
+const filteredleaves = computed(() =>
+    props.leaves.filter(
+        (leave) =>
+            leave.name.toLowerCase().includes(search.value.toLowerCase()) ||
+            leave.email.toLowerCase().includes(search.value.toLowerCase())
+    )
+);
+
+const sortedleaves = computed(() => {
+    return [...filteredleaves.value].sort((a, b) => {
+        const valA = a[sortKey.value]?.toString().toLowerCase();
+        const valB = b[sortKey.value]?.toString().toLowerCase();
+
+        if (valA < valB) return sortOrder.value === "asc" ? -1 : 1;
+        if (valA > valB) return sortOrder.value === "asc" ? 1 : -1;
+        return 0;
+    });
+});
+
+const totalPages = computed(() =>
+    Math.ceil(sortedleaves.value.length / perPage.value)
+);
+
+const paginatedleaves = computed(() => {
+    const start = (page.value - 1) * perPage.value;
+    const end = start + perPage.value;
+    return sortedleaves.value.slice(start, end);
+});
+
+const sortBy = (key) => {
+    if (sortKey.value === key) {
+        sortOrder.value = sortOrder.value === "asc" ? "desc" : "asc";
+    } else {
+        sortKey.value = key;
+        sortOrder.value = "asc";
+    }
+};
+
+const pages = computed(() => {
+    const arr = [];
+    for (let i = 1; i <= totalPages.value; i++) {
+        arr.push(i);
+    }
+    return arr;
+});
+
+const viewEmployee = (leave) => {
+    router.visit(`/employee/profile/${leave.id}`);
+};
 </script>
 
 <template>
@@ -95,7 +141,7 @@ const toggleEditModal = (user) => {
 
         <BRow>
             <BCol lg="12">
-                <BCard no-body id="usersList">
+                <BCard no-body id="leavesList">
                     <BCardHeader class="border-0">
                         <div class="d-flex align-items-center">
                             <h5 class="card-title mb-0 flex-grow-1">
@@ -145,7 +191,7 @@ const toggleEditModal = (user) => {
                                         <input
                                             type="text"
                                             class="form-control search bg-light border-light"
-                                            placeholder="Search for users..."
+                                            placeholder="Search for leaves..."
                                             v-model="search"
                                         />
                                         <i
@@ -161,7 +207,7 @@ const toggleEditModal = (user) => {
                         <div class="table-responsive table-card mb-4">
                             <table
                                 class="table align-middle table-nowrap mb-0"
-                                id="usersTable"
+                                id="leavesTable"
                             >
                                 <thead class="table-light text-muted">
                                     <tr>
@@ -274,7 +320,12 @@ const toggleEditModal = (user) => {
                                     </tr>
                                 </thead>
                                 <tbody class="list form-check-all">
-                                    <tr>
+                                    <tr
+                                        v-for="(
+                                            leave, index
+                                        ) in paginatedleaves"
+                                        :key="index"
+                                    >
                                         <th scope="row">
                                             <div class="form-check">
                                                 <input
@@ -283,24 +334,24 @@ const toggleEditModal = (user) => {
                                                 />
                                             </div>
                                         </th>
-                                        <td>dfdf</td>
-                                        <td>dsfsd</td>
-                                        <td>sdfds</td>
-                                        <td>sdfds</td>
-                                        <td>sdfds</td>
-                                        <td>dfs</td>
+                                        <td>{{ leave.id }}</td>
+                                        <td>{{ leave.name }}</td>
+                                        <td>{{ leave.email }}</td>
+                                        <td>{{ leave.position }}</td>
+                                        <td>{{ leave.department }}</td>
+                                        <td>{{ leave.salary }}</td>
                                         <td class="d-flex gap-2">
                                             <BButton
                                                 variant="danger px-3"
                                                 class="add-btn"
-                                                @click="toggleEditModal(user)"
+                                                @click="toggleEditModal(leave)"
                                             >
                                                 Edit
                                             </BButton>
                                             <BButton
                                                 variant="info px-3"
                                                 size="sm"
-                                                @click="viewEmployee(user)"
+                                                @click="viewEmployee(leave)"
                                             >
                                                 View
                                             </BButton>
@@ -310,7 +361,9 @@ const toggleEditModal = (user) => {
                             </table>
 
                             <div
-                                class="noresult">
+                                class="noresult"
+                                v-if="paginatedleaves.length < 1"
+                            >
                                 <div class="text-center p-4">
                                     <h5 class="mt-2">Sorry! No Result Found</h5>
                                     <p class="text-muted mb-0">
@@ -362,236 +415,153 @@ const toggleEditModal = (user) => {
             </BCol>
         </BRow>
 
-        <!-- user list modal -->
+        <!-- leave list modal -->
         <BModal
-            v-model="userListModal"
+            v-model="leaveListModal"
             id="showmodal"
             modal-class="zoomIn"
             hide-footer
-            header-class="p-3 bg-info-subtle userModal"
+            header-class="p-3 bg-info-subtle leaveModal"
             class="v-modal-custom"
             centered
             size="lg"
-            :title="dataEdit ? 'Edit user' : 'Add user'"
+            :title="dataEdit ? 'Edit leave' : 'Add leave'"
         >
-            <BForm id="addform" class="tablelist-form" autocomplete="off">
+            <BForm id="leaveForm" class="tablelist-form" autocomplete="off">
                 <BRow class="g-3">
-                    <!-- Name -->
+                    <!-- Leave Type -->
                     <BCol lg="6">
-                        <label for="name-field" class="form-label"
-                            >Full Name</label
+                        <label for="leave_type" class="form-label"
+                            >Leave Type</label
                         >
-                        <input
-                            type="text"
-                            id="name-field"
-                            class="form-control"
-                            placeholder="Enter full name"
-                            v-model="form.name"
-                            :class="{ 'is-invalid': submitted && !form.name }"
-                        />
-                        <div class="invalid-feedback">Please enter a name.</div>
-                    </BCol>
-
-                    <!-- Email -->
-                    <BCol lg="6">
-                        <label for="email-field" class="form-label"
-                            >Email</label
+                        <select
+                            id="leave_type"
+                            class="form-select shadow-none"
+                            v-model="form.leave_type"
                         >
-                        <input
-                            type="email"
-                            id="email-field"
-                            class="form-control"
-                            placeholder="Enter email address"
-                            v-model="form.email"
-                            :class="{ 'is-invalid': submitted && !form.email }"
-                        />
-                        <div class="invalid-feedback">
-                            Please enter an email.
+                            <option value="">Select Type</option>
+                            <option value="annual">Annual</option>
+                            <option value="sick">Sick</option>
+                            <option value="emergency">Emergency</option>
+                        </select>
+                        <div
+                            class="invalid-feedback"
+                            v-if="submitted && !form.leave_type"
+                        >
+                            Please select a leave type.
                         </div>
                     </BCol>
 
-                    <!-- Password -->
+
+                    <!-- Start Date -->
                     <BCol lg="6">
-                        <label for="password-field" class="form-label"
-                            >Password</label
+                        <label for="start_date" class="form-label"
+                            >Start Date</label
                         >
                         <input
-                            type="password"
-                            id="password-field"
+                            type="date"
+                            id="start_date"
                             class="form-control"
-                            placeholder="Enter password"
-                            v-model="form.password"
+                            v-model="form.start_date"
                             :class="{
-                                'is-invalid': submitted && !form.password,
+                                'is-invalid': submitted && !form.start_date,
                             }"
                         />
                         <div class="invalid-feedback">
-                            Please enter a password.
+                            Please select start date.
                         </div>
                     </BCol>
 
-                    <!-- ID Number -->
+                    <!-- End Date -->
                     <BCol lg="6">
-                        <label for="id-number" class="form-label"
-                            >ID Number</label
+                        <label for="end_date" class="form-label"
+                            >End Date</label
                         >
                         <input
-                            type="text"
-                            id="id-number"
+                            type="date"
+                            id="end_date"
                             class="form-control"
-                            placeholder="Enter employee ID number"
-                            v-model="form.id_number"
+                            v-model="form.end_date"
+                            :class="{
+                                'is-invalid': submitted && !form.end_date,
+                            }"
+                        />
+                        <div class="invalid-feedback">
+                            Please select end date.
+                        </div>
+                    </BCol>
+
+                    <!-- Is Medical -->
+                    <BCol lg="6">
+                        <label class="form-label d-block"
+                            >Is Medical Leave?</label
+                        >
+                        <div class="form-check form-switch">
+                            <input
+                                class="form-check-input"
+                                type="checkbox"
+                                id="is_medical"
+                                v-model="form.is_medical"
+                            />
+                            <label class="form-check-label" for="is_medical">
+                                {{ form.is_medical ? "Yes" : "No" }}
+                            </label>
+                        </div>
+                    </BCol>
+
+                    <!-- Medical File Upload -->
+                    <BCol lg="12" v-if="form.is_medical">
+                        <label for="medical_excuse_file" class="form-label"
+                            >Medical Excuse File</label
+                        >
+                        <input
+                            type="file"
+                            id="medical_excuse_file"
+                            class="form-control"
+                            @change="handleFileUpload"
                         />
                     </BCol>
 
-                    <!-- Position -->
-                    <BCol lg="6">
-                        <label for="position" class="form-label"
-                            >Position</label
-                        >
-                        <input
-                            type="text"
-                            id="position"
+                    <!-- Reason -->
+                    <BCol lg="12">
+                        <label for="reason" class="form-label">Reason</label>
+                        <textarea
+                            id="reason"
                             class="form-control"
-                            placeholder="Enter position"
-                            v-model="form.position"
-                        />
-                    </BCol>
-
-                    <!-- Department -->
-                    <BCol lg="6">
-                        <label for="department" class="form-label"
-                            >Department</label
-                        >
-                        <input
-                            type="text"
-                            id="department"
-                            class="form-control"
-                            placeholder="Enter department"
-                            v-model="form.department"
-                        />
-                    </BCol>
-
-                    <!-- Employment Status -->
-                    <BCol lg="6">
-                        <label for="employ-status" class="form-label"
-                            >Employment Status</label
-                        >
-                        <select
-                            id="employ-status"
-                            class="form-select shadow-none"
-                            v-model="form.employ_status"
-                        >
-                            <option value="">Select status</option>
-                            <option value="Full-time">Full-time</option>
-                            <option value="Part-time">Part-time</option>
-                            <option value="Contract">Contract</option>
-                            <option value="Intern">Intern</option>
-                        </select>
-                    </BCol>
-
-                    <!-- Salary -->
-                    <BCol lg="6">
-                        <label for="salary" class="form-label">Salary</label>
-                        <input
-                            type="number"
-                            id="salary"
-                            class="form-control"
-                            placeholder="Enter salary amount"
-                            v-model="form.salary"
-                        />
-                    </BCol>
-
-                    <!-- Allowances -->
-                    <BCol lg="6">
-                        <label for="allowances" class="form-label"
-                            >Allowances</label
-                        >
-                        <input
-                            type="number"
-                            id="allowances"
-                            class="form-control"
-                            placeholder="Enter allowances amount"
-                            v-model="form.allowances"
-                        />
-                    </BCol>
-
-                    <!-- Deductions -->
-                    <!-- <BCol lg="6">
-                        <label for="deductions" class="form-label"
-                            >Deductions</label
-                        >
-                        <input
-                            type="number"
-                            id="deductions"
-                            class="form-control"
-                            placeholder="Enter deductions amount"
-                            v-model="form.deductions"
-                        />
-                    </BCol> -->
-
-                    <!-- Annual Leave Balance -->
-                    <BCol lg="6">
-                        <label for="annual-leave" class="form-label"
-                            >Annual Leave Balance</label
-                        >
-                        <input
-                            type="number"
-                            id="annual-leave"
-                            class="form-control"
-                            placeholder="Enter annual leave days"
-                            v-model="form.annual_leave_balance"
-                        />
-                    </BCol>
-
-                    <!-- Sick Leave Balance -->
-                    <BCol lg="6">
-                        <label for="sick-leave" class="form-label"
-                            >Sick Leave Balance</label
-                        >
-                        <input
-                            type="number"
-                            id="sick-leave"
-                            class="form-control"
-                            placeholder="Enter sick leave days"
-                            v-model="form.sick_leave_balance"
-                        />
+                            rows="3"
+                            placeholder="Enter reason for leave"
+                            v-model="form.reason"
+                        ></textarea>
                     </BCol>
                 </BRow>
 
                 <!-- Modal Footer -->
                 <div class="hstack gap-2 justify-content-end mt-3">
-                    <BButton
-                        type="button"
-                        variant="light"
-                        @click="userListModal = false"
-                        id="closemodal"
-                    >
+                    <BButton type="button" variant="light" @click="closeModal">
                         Close
                     </BButton>
                     <BButton
                         type="submit"
                         variant="success"
-                        id="add-btn"
                         @click="handleSubmit"
                     >
-                        {{ dataEdit ? "Update" : "Add user" }}
+                        {{ dataEdit ? "Update" : "Add Leave" }}
                     </BButton>
                 </div>
             </BForm>
         </BModal>
 
-        <!-- Edit user modal -->
+        <!-- Edit leave modal -->
         <BModal
-            v-model="userEditListModal"
+            v-model="leaveEditListModal"
             id="editmodal"
             modal-class="zoomIn"
             hide-footer
-            header-class="p-3 bg-info-subtle userModal"
+            header-class="p-3 bg-info-subtle leaveModal"
             class="v-modal-custom"
             centered
             size="lg"
-            :title="'Edit user'"
+            :title="'Edit leave'"
         >
             <BForm id="editform" class="tablelist-form" autocomplete="off">
                 <BRow class="g-3">
@@ -657,7 +627,9 @@ const toggleEditModal = (user) => {
 
                     <!-- Salary -->
                     <BCol lg="6">
-                        <label for="edit-salary" class="form-label">Salary</label>
+                        <label for="edit-salary" class="form-label"
+                            >Salary</label
+                        >
                         <input
                             type="number"
                             id="edit-salary"
@@ -715,7 +687,7 @@ const toggleEditModal = (user) => {
                     <BButton
                         type="button"
                         variant="light"
-                        @click="userEditListModal = false"
+                        @click="leaveEditListModal = false"
                         id="closemodal"
                     >
                         Close
