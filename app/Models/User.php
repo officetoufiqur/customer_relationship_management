@@ -68,4 +68,14 @@ class User extends Authenticatable implements MustVerifyEmail
     {
         return $this->hasMany(Leave::class);
     }
+
+    public function tasks()
+    {
+        return $this->hasMany(Task::class);
+    }
+
+    public function taskUsers()
+    {
+        return $this->hasMany(TaskUser::class);
+    }
 }

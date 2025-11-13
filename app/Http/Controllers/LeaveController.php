@@ -44,6 +44,7 @@ class LeaveController extends Controller
             'end_date' => $validated['end_date'],
             'is_medical' => $validated['is_medical'] ?? false,
             'medical_excuse_file' => $filePath,
+            'status' => 'pending',
         ]);
 
         return redirect()->back()->with('success', 'Leave request submitted successfully.');
@@ -51,30 +52,28 @@ class LeaveController extends Controller
 
     public function update(Request $request, $id)
     {
-        $validated = $request->validate([
-            'leave_type' => 'required|in:annual,sick,emergency',
-            'reason' => 'required|string|max:500',
-            'start_date' => 'required|date',
-            'end_date' => 'required|date|after_or_equal:start_date',
-            'is_medical' => 'nullable|boolean',
-            'medical_excuse_file' => 'nullable|file|mimes:jpg,jpeg,png,pdf|max:2048',
-        ]);
-
         $leave = Leave::findOrFail($id);
 
         if ($request->hasFile('medical_excuse_file')) {
-            if ($leave->medical_excuse_file) {
-                unlink(public_path($leave->medical_excuse_file));
+            if ($leave->medical_excuse_file && file_exists(public_path(ltrim($leave->medical_excuse_file, '/')))) {
+                unlink(public_path(ltrim($leave->medical_excuse_file, '/')));
             }
+
             $imagePath = FileUpload::storeFile($request->file('medical_excuse_file'), 'uploads/leave');
-            $validated['medical_excuse_file'] = $imagePath;
+            $leave->medical_excuse_file = $imagePath;
         }
 
-        $leave->update($validated);
+        $leave->leave_type = $request->leave_type;
+        $leave->reason = $request->reason;
+        $leave->start_date = $request->start_date;
+        $leave->end_date = $request->end_date;
+        $leave->is_medical = $request->is_medical;
+        $leave->status = 'pending';
+
+        $leave->save();
 
         return redirect()->back()->with('success', 'Leave request updated successfully.');
     }
-
 
     public function updateStatus(Request $request, $id)
     {

@@ -2,6 +2,7 @@
 
 use App\Http\Controllers\EmployeeController;
 use App\Http\Controllers\LeaveController;
+use App\Http\Controllers\TaskController;
 use App\Http\Controllers\VelzonRoutesController;
 use Illuminate\Support\Facades\Route;
 
@@ -30,6 +31,11 @@ Route::middleware(['auth:sanctum', config('jetstream.auth_session'), 'verified',
         Route::post('/leave/store', 'store')->name('leave.store');
         Route::post('/leave/update/{id}', 'update')->name('leave.update');
         Route::put('/leave/update/status/{id}', 'updateStatus')->name('leave.update.status');
+    });
+
+    Route::controller(TaskController::class)->group(function () {
+        Route::get("/tasks-list", "tasksList")->name("tasks.list");
+        Route::post("/tasks/store", "tasksStore")->name("tasks.store");
     });
 
     Route::controller(VelzonRoutesController::class)->group(function () {
@@ -81,7 +87,7 @@ Route::middleware(['auth:sanctum', config('jetstream.auth_session'), 'verified',
         // apps task routes
         Route::get("/apps/tasks-details", "tasks_details");
         Route::get("/apps/tasks-kanban", "tasks_kanban");
-        Route::get("/apps/tasks-list-view", "tasks_list_view");
+      
 
         // apps tickets routes
         Route::get("/apps/tickets-details", "tickets_details");

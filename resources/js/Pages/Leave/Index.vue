@@ -108,17 +108,17 @@ const viewForm = useForm({
 });
 
 const toggleViewModal = (leave) => {
-    dataEdit.value = leave;
-    editForm.user_id = leave.user_id || "";
-    editForm.leave_type = leave.leave_type || "";
-    editForm.reason = leave.reason || "";
-    editForm.status = leave.status || "";
-    editForm.start_date = leave.start_date || "";
-    editForm.end_date = leave.end_date || "";
-    editForm.is_medical = leave.is_medical == 1 || leave.is_medical === true;
-    editForm.medical_excuse_file = leave.medical_excuse_file || null;
-    leaveViewModal.value = true;
-};
+     dataEdit.value = leave;
+     editForm.user_id = leave.user_id || "";
+     editForm.leave_type = leave.leave_type || "";
+     editForm.reason = leave.reason || "";
+     editForm.status = leave.status || "";
+     editForm.start_date = leave.start_date || "";
+     editForm.end_date = leave.end_date || "";
+     editForm.is_medical = leave.is_medical == 1 || leave.is_medical === true;
+     editForm.medical_excuse_file = leave.medical_excuse_file || null;
+     leaveViewModal.value = true;
+ };
 
 // ===== PAGINATION + SORTING =====
 const search = ref("");
@@ -177,6 +177,7 @@ watch(
     (newVal) => {
         if (newVal) {
             setTimeout(() => initDropify(), 100);
+            setTimeout(() => editDropify(), 100);
         }
     }
 );
@@ -186,12 +187,24 @@ watch(
     (newVal) => {
         if (newVal) {
             setTimeout(() => initDropify(), 100);
+            setTimeout(() => editDropify(), 100);
         }
     }
 );
 
 const initDropify = () => {
     $(".dropify").dropify({
+        messages: {
+            default: "Drag and drop a file here or click",
+            replace: "Drag and drop or click to replace",
+            remove: "Remove",
+            error: "Oops, something went wrong.",
+        },
+    });
+};
+
+const editDropify = () => {
+    $(".image").dropify({
         defaultFile: editForm.medical_excuse_file || "",
         messages: {
             default: "Drag and drop a file here or click",
@@ -204,6 +217,7 @@ const initDropify = () => {
 
 onMounted(() => {
     initDropify();
+    editDropify();
 });
 </script>
 
@@ -379,6 +393,22 @@ onMounted(() => {
                                                 ]"
                                             ></i>
                                         </th>
+                                        <th
+                                            @click="sortBy('reason')"
+                                            style="cursor: pointer"
+                                        >
+                                            Reason
+                                            <i
+                                                :class="[
+                                                    'ms-1',
+                                                    sortKey === 'reason'
+                                                        ? sortOrder === 'asc'
+                                                            ? 'bx bxs-sort-alt'
+                                                            : 'bx bxs-sort-alt'
+                                                        : '',
+                                                ]"
+                                            ></i>
+                                        </th>
                                         <th style="cursor: pointer">Action</th>
                                     </tr>
                                 </thead>
@@ -415,17 +445,23 @@ onMounted(() => {
                                             }}
                                         </td>
                                         <td>
+                                            <BButton v-if="leave.status == 'pending'"
+                                                variant=" px-3 py-1"
+                                                class="add-btn" style="background-color: #F3F6F9; color: #878A99; font-weight: 500;">
+                                                {{ leave.status }}
+                                            </BButton>
                                             <BButton v-if="leave.status == 'approved'"
-                                                variant="success px-3 py-1"
-                                                class="add-btn">
+                                                variant=" px-3 py-1"
+                                                class="add-btn" style="background-color: #DFF2E3; color: #28A987; font-weight: 500;">
                                                 {{ leave.status }}
                                             </BButton>
                                             <BButton v-if="leave.status == 'reject'"
-                                                variant="danger px-3 py-1"
-                                                class="add-btn">
-                                                {{ leave.status }}
+                                                variant="px-3 py-1"
+                                                class="add-btn" style="background-color: #FCF2F2; color: #CA2026; font-weight: 500;">
+                                                Rejected
                                             </BButton>
                                         </td>
+                                        <td>{{ leave.reason.length > 20 ? leave.reason.slice(0, 20) + '...' : leave.reason }}</td>
                                         <td class="d-flex gap-2">
                                             <BButton
                                                 variant="danger px-3"
@@ -738,7 +774,7 @@ onMounted(() => {
                         <input
                             type="file"
                             id="medical_excuse_file"
-                            class="dropify"
+                            class="image"
                             data-height="150"
                             @change="handleEditFileUpload($event, false)"
                         />

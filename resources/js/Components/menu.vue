@@ -286,18 +286,9 @@ export default {
                     </a>
                     <div class="collapse menu-dropdown" id="sidebarTasks">
                         <ul class="nav nav-sm flex-column">
-                            <!-- <li class="nav-item">
-                                <Link
-                                    href="/apps/tasks-kanban"
-                                    class="nav-link"
-                                    data-key="t-kanbanboard"
-                                >
-                                    {{ $t("t-kanbanboard") }}
-                                </Link>
-                            </li> -->
                             <li class="nav-item">
                                 <Link
-                                    href="/apps/tasks-list-view"
+                                    href="/tasks-list"
                                     class="nav-link"
                                     data-key="t-list-view"
                                 >
