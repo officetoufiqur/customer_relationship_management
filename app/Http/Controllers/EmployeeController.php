@@ -70,12 +70,12 @@ class EmployeeController extends Controller
         return redirect()->back()->with('success', 'Employee created successfully.');
     }
 
-    public function update(Request $request, $id)
+   public function update(Request $request, $id)
     {
-        $employee = Employee::findOrFail($id);
+        $user = User::findOrFail($id);
 
         $request->validate([
-            'id_number' => 'required|string|unique:employees,id_number,'.$employee->id,
+            'id_number' => 'required|string|unique:employees,id_number,'.$user->id,
             'salary' => 'nullable|numeric',
             'allowances' => 'nullable|numeric',
             'deductions' => 'nullable|numeric',
@@ -83,17 +83,34 @@ class EmployeeController extends Controller
             'sick_leave_balance' => 'nullable|integer',
         ]);
 
-        $employee->update([
-            'id_number' => $request->id_number,
-            'position' => $request->position,
-            'department' => $request->department,
-            'employ_status' => $request->employ_status,
-            'salary' => $request->salary ?? 0,
-            'allowances' => $request->allowances ?? 0,
-            'deductions' => $request->deductions ?? 0,
-            'annual_leave_balance' => $request->annual_leave_balance ?? 0,
-            'sick_leave_balance' => $request->sick_leave_balance ?? 0,
-        ]);
+        $employee = Employee::where('user_id', $user->id)->first();
+
+        if ($employee) {
+            $employee->update([
+                'id_number' => $request->id_number,
+                'position' => $request->position,
+                'department' => $request->department,
+                'employ_status' => $request->employ_status,
+                'salary' => $request->salary ?? 0,
+                'allowances' => $request->allowances ?? 0,
+                'deductions' => $request->deductions ?? 0,
+                'annual_leave_balance' => $request->annual_leave_balance ?? 0,
+                'sick_leave_balance' => $request->sick_leave_balance ?? 0,
+            ]);
+        } else {
+            Employee::create([
+                'user_id' => $user->id, 
+                'id_number' => $request->id_number,
+                'position' => $request->position,
+                'department' => $request->department,
+                'employ_status' => $request->employ_status,
+                'salary' => $request->salary ?? 0,
+                'allowances' => $request->allowances ?? 0,
+                'deductions' => $request->deductions ?? 0,
+                'annual_leave_balance' => $request->annual_leave_balance ?? 0,
+                'sick_leave_balance' => $request->sick_leave_balance ?? 0,
+            ]);
+        }
 
         return redirect()->back()->with('success', 'Employee updated successfully.');
     }
@@ -133,7 +150,7 @@ class EmployeeController extends Controller
 
     public function pages_profile_setting($id)
     {
-         $user = User::with('employee')->findOrFail($id);
+        $user = User::with('employee')->findOrFail($id);
         $employee = $user->employee;
 
         // Base user data

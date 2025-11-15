@@ -75,7 +75,7 @@ const handleSubmit = () => {
 const userEditListModal = ref(false);
 
 const toggleEditModal = (user) => {
-    dataEdit.value = user; 
+    dataEdit.value = user;
     editForm.id_number = user.id_number || "";
     editForm.position = user.position || "";
     editForm.department = user.department || "";
@@ -85,9 +85,8 @@ const toggleEditModal = (user) => {
     editForm.deductions = user.deductions || "";
     editForm.annual_leave_balance = user.annual_leave_balance || "";
     editForm.sick_leave_balance = user.sick_leave_balance || "";
-    userEditListModal.value = true; 
+    userEditListModal.value = true;
 };
-
 
 // ===== PAGINATION + SORTING =====
 const search = ref("");
@@ -720,7 +719,9 @@ const viewEmployee = (user) => {
 
                     <!-- Salary -->
                     <BCol lg="6">
-                        <label for="edit-salary" class="form-label">Salary</label>
+                        <label for="edit-salary" class="form-label"
+                            >Salary</label
+                        >
                         <input
                             type="number"
                             id="edit-salary"

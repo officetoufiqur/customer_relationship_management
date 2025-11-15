@@ -226,7 +226,6 @@ const paginate = (tasks) => {
     let to = pageNum * perPage.value;
     return tasks.slice(from, to);
 };
-
 </script>
 
 <template>
@@ -491,13 +490,76 @@ const paginate = (tasks) => {
                                             {{ task.description }}
                                         </td>
 
-                                        <td
-                                            class="due_date"
-                                            v-for="user in task.task_users"
-                                            :key="user.id"
-                                        >
-                                            {{ user.assigned_to.name }}
+                                        <td class="due_date">
+                                            <div class="avatar-group">
+                                                <a
+                                                    v-for="user in task.task_users"
+                                                    :key="user.id"
+                                                    href="javascript:void(0);"
+                                                    class="avatar-group-item"
+                                                    data-bs-toggle="tooltip"
+                                                    data-bs-placement="top"
+                                                    :title="
+                                                        user.assigned_to.name
+                                                    "
+                                                >
+                                                    <!-- If user has image -->
+                                                    <b-img
+                                                        v-if="
+                                                            user.assigned_to
+                                                                .avatar
+                                                        "
+                                                        :src="
+                                                            user.assigned_to
+                                                                .avatar
+                                                        "
+                                                        alt=""
+                                                        class="rounded-circle avatar-sm"
+                                                    ></b-img>
+
+                                                    <!-- If avatar not available show first letter -->
+                                                    <div
+                                                        v-else
+                                                        class="avatar-sm"
+                                                    >
+                                                        <div
+                                                            class="avatar-title rounded-circle bg-light text-primary"
+                                                        >
+                                                            {{
+                                                                user.assigned_to.name.charAt(
+                                                                    0
+                                                                )
+                                                            }}
+                                                        </div>
+                                                    </div>
+                                                </a>
+
+                                                <!-- Extra Users (More than 3 example) -->
+                                                <a
+                                                    v-if="
+                                                        task.task_users.length >
+                                                        3
+                                                    "
+                                                    href="javascript:void(0);"
+                                                    class="avatar-group-item"
+                                                    data-bs-toggle="tooltip"
+                                                    data-bs-placement="top"
+                                                    title="more"
+                                                >
+                                                    <div class="avatar-sm">
+                                                        <div
+                                                            class="avatar-title rounded-circle"
+                                                        >
+                                                            {{
+                                                                task.task_users
+                                                                    .length - 3
+                                                            }}+
+                                                        </div>
+                                                    </div>
+                                                </a>
+                                            </div>
                                         </td>
+
                                         <td class="due_date">
                                             {{ task.deadline }}
                                         </td>
@@ -536,7 +598,10 @@ const paginate = (tasks) => {
                                             >
                                                 Delete
                                             </BButton>
-                                            <Link :href="`/task/view/${task.id}`" class="btn btn-info">
+                                            <Link
+                                                :href="`/task/view/${task.id}`"
+                                                class="btn btn-info"
+                                            >
                                                 View
                                             </Link>
                                         </td>
@@ -826,13 +891,13 @@ const paginate = (tasks) => {
                     </BCol>
                     <BCol lg="12">
                         <div class="mb-2">
-                            <p for="attachment-field" class="form-label"
-                                >Attachment</p
-                            >
+                            <p for="attachment-field" class="form-label">
+                                Attachment
+                            </p>
                             <img
                                 :src="editForm.attachment"
                                 alt=""
-                                style="width: 15%; border-radius: 5px;"
+                                style="width: 15%; border-radius: 5px"
                             />
                         </div>
                         <input

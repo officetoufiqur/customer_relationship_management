@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Helpers\FileUpload;
+use App\Models\Employee;
 use App\Models\Task;
 use App\Models\TaskUser;
 use App\Models\User;
@@ -109,8 +110,49 @@ class TaskController extends Controller
     public function tasksView($id)
     {
         $task = Task::with('taskUsers.assignedTo')->find($id);
-        // return $task;
-        return Inertia::render('Tasks/View', compact('task'));
+
+        $cleanTask = [
+            'id' => $task->id,
+            'title' => $task->title,
+            'description' => $task->description,
+            'deadline' => $task->deadline,
+            'status' => $task->status,
+
+            // attachment -> array
+            'attachments' => collect(explode(',', $task->attachment))->map(function ($path) {
+                $bytes = file_exists(public_path($path)) ? filesize(public_path($path)) : 0;
+
+                if ($bytes >= 1024 * 1024) {
+                    $size = round($bytes / 1024 / 1024, 2).' MB';
+                } elseif ($bytes >= 1024) {
+                    $size = round($bytes / 1024, 2).' KB';
+                } else {
+                    $size = $bytes.' B';
+                }
+
+                return [
+                    'path' => $path,
+                    'size' => $size,
+                ];
+            }),
+
+            // users clean
+            'users' => $task->taskUsers->map(function ($user) {
+                $employee = Employee::where('user_id', $user->assignedTo->id)->select('id','position','image')->first();
+                return [
+                    'id' => $user->assignedTo->id,
+                    'name' => $user->assignedTo->name,
+                    'profile_photo_path' => $user->assignedTo->profile_photo_path,
+                    'employee' => $employee,
+                ];
+            }),
+        ];
+
+        // return $cleanTask;
+
+        return Inertia::render('Tasks/View', [
+            'task' => $cleanTask,
+        ]);
     }
 
     public function tasksDestroy($id)
@@ -126,6 +168,7 @@ class TaskController extends Controller
             }
         }
         $task->delete();
+
         return redirect()->back()->with('success', 'Task deleted successfully.');
     }
 }
