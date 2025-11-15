@@ -14,7 +14,8 @@ class TaskUser extends Model
         'assigned_to',
         'delay_reason',
         'transferred_to',
-        'transferred_note'
+        'transferred_note',
+        'status'
     ];
 
     public function task()

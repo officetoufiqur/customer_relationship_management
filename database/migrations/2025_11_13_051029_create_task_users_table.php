@@ -17,6 +17,7 @@ return new class extends Migration
             $table->foreignId('assigned_to')->constrained('users')->onDelete('cascade');
             $table->text('delay_reason')->nullable();
             $table->foreignId('transferred_to')->nullable()->constrained('users')->onDelete('cascade');
+            $table->enum('status', ['pending', 'in_progress', 'completed', 'delayed'])->default('pending');
             $table->text('transferred_note')->nullable();
             $table->date('completed_at')->nullable();
             $table->timestamps();

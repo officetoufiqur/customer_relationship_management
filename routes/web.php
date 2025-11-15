@@ -36,6 +36,9 @@ Route::middleware(['auth:sanctum', config('jetstream.auth_session'), 'verified',
     Route::controller(TaskController::class)->group(function () {
         Route::get("/tasks-list", "tasksList")->name("tasks.list");
         Route::post("/tasks/store", "tasksStore")->name("tasks.store");
+        Route::post("/task/update/{id}", "tasksUpdate")->name("tasks.update");
+        Route::get("/task/view/{id}", "tasksView")->name("tasks.view");
+        Route::delete("/tasks/destroy/{id}", "tasksDestroy")->name("tasks.destroy");
     });
 
     Route::controller(VelzonRoutesController::class)->group(function () {

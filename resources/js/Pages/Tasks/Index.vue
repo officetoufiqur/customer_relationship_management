@@ -1,9 +1,8 @@
-<script>
+<script setup>
+import { ref, computed, watch, onMounted } from "vue";
 import { Link, Head, useForm } from "@inertiajs/vue3";
 import { CountTo } from "vue3-count-to";
-import Multiselect from "@vueform/multiselect";
 import "@vueform/multiselect/themes/default.css";
-import flatPickr from "vue-flatpickr-component";
 import "flatpickr/dist/flatpickr.css";
 
 import Layout from "@/Layouts/main.vue";
@@ -15,263 +14,219 @@ import animationData1 from "@/Components/widgets/gsqxdxog.json";
 import Lottie from "@/Components/widgets/lottie.vue";
 import simplebar from "simplebar-vue";
 
-export default {
-    props: {
-        users: Array,
-        tasks: Array,
-    },
+const props = defineProps({
+    users: Array,
+    tasks: Array,
+});
 
-    data() {
-        return {
-            taskListModal: false,
-            taskEditModal: false,
-            deleteModal: false,
-            submitted: false,
-            dataEdit: false,
-            allTask: [],
-            page: 1,
-            perPage: 8,
-            pages: [],
-            searchQuery: null,
-            filterdate: null,
-            filtervalue: "All",
+// Data
+const taskListModal = ref(false);
+const taskEditModal = ref(false);
+const deleteModal = ref(false);
+const submitted = ref(false);
+const dataEdit = ref(false);
+const allTask = ref([]);
+const page = ref(1);
+const pages = ref([]);
+const searchQuery = ref(null);
+const filterdate = ref(null);
+const filtervalue = ref("All");
 
-            // 🔹 Flatpickr config
-            timeConfig: {
-                enableTime: false,
-                dateFormat: "Y-m-d",
-            },
-
-            // 🔹 Lottie animations (optional)
-            defaultOptions: { animationData },
-            defaultOptions1: { animationData: animationData1 },
-
-            // Event object (Task Form Data)
-            event: {
-                id: "",
-                title: "",
-                description: "",
-                attachment: [],
-                assigned_to: [],
-                deadline: "",
-            },
-        };
-    },
-
-    components: {
-        CountTo,
-        Layout,
-        PageHeader,
-        lottie: Lottie,
-        Multiselect,
-        flatPickr,
-        simplebar,
-        Link,
-        Head,
-    },
-
-    computed: {
-        displayedPosts() {
-            return this.paginate(this.tasks);
-        },
-        resultQuery() {
-            if (this.searchQuery) {
-                const search = this.searchQuery.toLowerCase();
-                return this.displayedPosts.filter((data) => {
-                    return (
-                        data.title.toLowerCase().includes(search) ||
-                        data.description.toLowerCase().includes(search) ||
-                        data.deadline.toLowerCase().includes(search) ||
-                        data.status.toLowerCase().includes(search)
-                    );
-                });
-            }
-            return this.displayedPosts;
-        },
-    },
-
-    watch: {
-        allTask() {
-            this.setPages();
-        },
-    },
-
-    created() {
-        this.setPages();
-        this.fetchTasks();
-    },
-
-    methods: {
-        handleAttachment(event) {
-            this.event.attachment = Array.from(event.target.files);
-        },
-        // 🔹 Fetch all tasks from backend (Laravel API)
-        async fetchTasks() {
-            try {
-                const res = await axios.get("/tasks");
-                this.allTask = res.data;
-            } catch (error) {
-                console.error(error);
-            }
-        },
-
-        setup() {
-            const form = useForm({
-                id: "",
-                title: "",
-                description: "",
-                attachment: [],
-                assigned_to: [],
-                deadline: "",
-            });
-
-            const editForm = useForm({
-                id: "",
-                title: "",
-                description: "",
-                attachment: [],
-                assigned_to: [],
-                deadline: "",
-            });
-
-            return { form, editForm };
-        },
-        // 🔹 Create or Update Task
-        async handleSubmit() {
-            this.submitted = true;
-
-            if (
-                !this.event.title ||
-                !this.event.deadline ||
-                !this.event.attachment.length
-            ) {
-                Swal.fire(
-                    "Validation Error",
-                    "Please fill all required fields",
-                    "warning"
-                );
-                return;
-            }
-
-            // যদি edit mode হয়
-            if (this.dataEdit && this.event.id) {
-                this.form = useForm(this.event);
-                this.form.post(`/tasks/update/${this.event.id}`, {
-                    onSuccess: () => {
-                        Swal.fire(
-                            "Updated!",
-                            "Task updated successfully",
-                            "success"
-                        );
-                        this.taskListModal = false;
-                        this.form.reset();
-                    },
-                    onError: (errors) => {
-                        console.error(errors);
-                        Swal.fire("Error", "Update failed", "error");
-                    },
-                });
-            } else {
-                // Create new task
-                this.form = useForm(this.event);
-                this.form.post("/tasks/store", {
-                    onSuccess: (res) => {
-                        Swal.fire(
-                            "Created!",
-                            "Task added successfully",
-                            "success"
-                        );
-                        this.taskListModal = false;
-                        this.form.reset();
-                    },
-                    onError: (errors) => {
-                        console.error(errors);
-                        Swal.fire("Error", "Creation failed", "error");
-                    },
-                });
-            }
-        },
-
-        // 🔹 Open Add Modal
-        toggleModal() {
-            this.taskListModal = true;
-            this.dataEdit = false;
-            this.resetForm();
-        },
-
-        // 🔹 Edit Task
-
-        editDetails(task) {
-            this.dataEdit = true;
-            this.taskEditModal = true;
-            this.submitted = false;
-
-            editForm.id = task.id;
-            editForm.title = task.title;
-            editForm.description = task.description;
-            editForm.attachment = task.attachment;
-            editForm.assigned_to = task.task_users.map(
-                (u) => u.assigned_to
-            );
-            editForm.deadline = task.deadline;
-        },
-
-        // 🔹 Delete Task
-        async deleteData() {
-            Swal.fire({
-                title: "Are you sure?",
-                text: "You won't be able to revert this!",
-                icon: "warning",
-                showCancelButton: true,
-                confirmButtonText: "Yes, delete it!",
-                cancelButtonText: "Cancel",
-            }).then((result) => {
-                if (result.isConfirmed) {
-                    form.delete(`/tasks/${this.event.id}`, {
-                        onSuccess: () => {
-                            Swal.fire(
-                                "Deleted!",
-                                "Task deleted successfully",
-                                "success"
-                            );
-                            this.deleteModal = false;
-                        },
-                        onError: (error) => {
-                            console.error(error);
-                            Swal.fire("Error", "Something went wrong", "error");
-                        },
-                    });
-                }
-            });
-        },
-
-        // 🔹 Pagination
-        setPages() {
-            let numberOfPages = Math.ceil(this.tasks.length / this.perPage);
-            this.pages = [];
-            for (let i = 1; i <= numberOfPages; i++) this.pages.push(i);
-        },
-        paginate(tasks) {
-            let page = this.page;
-            let perPage = this.perPage;
-            let from = page * perPage - perPage;
-            let to = page * perPage;
-            return tasks.slice(from, to);
-        },
-
-        // 🔹 Reset form data
-        resetForm() {
-            this.event = {
-                title: "",
-                description: "",
-                attachment: [],
-                assigned_to: [],
-                deadline: "",
-            };
-            this.submitted = false;
-        },
-    },
+// Flatpickr config
+const timeConfig = {
+    enableTime: false,
+    dateFormat: "Y-m-d",
 };
+
+// Lottie animations
+const defaultOptions = { animationData };
+
+// Event object (Task Form Data)
+const event = ref({
+    id: "",
+    title: "",
+    description: "",
+    attachment: [],
+    assigned_to: [],
+    deadline: "",
+});
+
+const baseForm = {
+    id: "",
+    title: "",
+    description: "",
+    attachment: [],
+    assigned_to: [],
+    deadline: "",
+};
+
+// Form state (used for both create & update)
+const form = useForm({ ...baseForm });
+const editForm = useForm({ ...baseForm });
+
+// Computed properties
+const displayedPosts = computed(() => {
+    return paginate(props.tasks);
+});
+
+const resultQuery = computed(() => {
+    if (searchQuery.value) {
+        const search = searchQuery.value.toLowerCase();
+        return displayedPosts.value.filter((data) => {
+            return (
+                data.title.toLowerCase().includes(search) ||
+                data.description.toLowerCase().includes(search) ||
+                data.deadline.toLowerCase().includes(search) ||
+                data.status.toLowerCase().includes(search)
+            );
+        });
+    }
+    return displayedPosts.value;
+});
+
+// Watch
+watch(allTask, () => {
+    setPages();
+});
+
+// Lifecycle
+onMounted(() => {
+    setPages();
+    fetchTasks();
+});
+
+// Methods
+const handleAttachment = (eventData) => {
+    event.value.attachment = Array.from(eventData.target.files);
+};
+
+const handleEditFileUpload = (e) => {
+    editForm.attachment = Array.from(e.target.files);
+};
+
+// 🔹 Fetch all tasks from backend (Laravel API)
+const fetchTasks = async () => {
+    try {
+        const res = await axios.get("/tasks");
+        allTask.value = res.data;
+    } catch (error) {
+        console.error(error);
+    }
+};
+
+// 🔹 Create or Update Task
+const handleSubmit = async () => {
+    submitted.value = true;
+
+    if (
+        !event.value.title ||
+        !event.value.deadline ||
+        !event.value.attachment.length
+    ) {
+        Swal.fire(
+            "Validation Error",
+            "Please fill all required fields",
+            "warning"
+        );
+        return;
+    }
+
+    form.id = event.value.id;
+    form.title = event.value.title;
+    form.description = event.value.description;
+    form.attachment = event.value.attachment;
+    form.assigned_to = event.value.assigned_to;
+    form.deadline = event.value.deadline;
+
+    form.post("/tasks/store", {
+        onSuccess: (res) => {
+            Swal.fire("Created!", "Task added successfully", "success");
+            taskListModal.value = false;
+            form.reset();
+        },
+        onError: (errors) => {
+            console.error(errors);
+            Swal.fire("Error", "Creation failed", "error");
+        },
+    });
+};
+
+// 🔹 Open Add Modal
+const toggleModal = () => {
+    taskListModal.value = true;
+    dataEdit.value = false;
+};
+
+// 🔹 Edit Task
+const editDetails = (task) => {
+    taskEditModal.value = true;
+
+    editForm.id = task.id;
+    editForm.title = task.title;
+    editForm.description = task.description;
+    editForm.attachment = task.attachment;
+    editForm.assigned_to = task.task_users.map((u) => u.assigned_to.id);
+    editForm.deadline = task.deadline;
+};
+
+const handleUpdateSubmit = () => {
+    editForm.post(`/task/update/${editForm.id}`, {
+        onSuccess: () => {
+            Swal.fire("Updated!", "Task updated successfully", "success");
+            taskEditModal.value = false;
+            editForm.reset();
+        },
+    });
+};
+
+// 🔹 Delete Task
+const deleteData = (task) => {
+    Swal.fire({
+        title: "Are you sure?",
+        text: "You won't be able to revert this!",
+        icon: "warning",
+        showCancelButton: true,
+        confirmButtonText: "Yes, delete it!",
+        cancelButtonText: "Cancel",
+    }).then((result) => {
+        if (result.isConfirmed) {
+            form.delete(`/tasks/destroy/${task.id}`, {
+                onSuccess: () => {
+                    Swal.fire(
+                        "Deleted!",
+                        "Task deleted successfully",
+                        "success"
+                    );
+                    deleteModal.value = false;
+                },
+                onError: (error) => {
+                    console.error(error);
+                    Swal.fire("Error", "Something went wrong", "error");
+                },
+            });
+        }
+    });
+};
+
+// 🔹 Pagination
+const perPage = ref(5);
+const sortKey = ref("id");
+const sortOrder = ref("asc");
+
+const setPages = () => {
+    let numberOfPages = Math.ceil(props.tasks.length / perPage.value);
+    pages.value = [];
+    for (let i = 1; i <= numberOfPages; i++) pages.value.push(i);
+};
+
+// 🔹 Paginate tasks
+const paginate = (tasks) => {
+    let pageNum = page.value;
+    let from = (pageNum - 1) * perPage.value;
+    let to = pageNum * perPage.value;
+    return tasks.slice(from, to);
+};
+
 </script>
 
 <template>
@@ -406,12 +361,28 @@ export default {
                         class="border border-dashed border-end-0 border-start-0"
                     >
                         <BFrom>
-                            <BRow class="g-3">
-                                <BCol xxl="5" sm="12">
+                            <BRow class="g-3 justify-content-between">
+                                <BCol
+                                    xxl="2"
+                                    sm="6"
+                                    class="d-flex align-items-center gap-2"
+                                >
+                                    <select
+                                        v-model="perPage"
+                                        class="form-select shadow-none w-auto cursor-pointer"
+                                        style="background-color: #f3f6f9"
+                                    >
+                                        <option :value="5">5</option>
+                                        <option :value="10">10</option>
+                                        <option :value="20">20</option>
+                                    </select>
+                                    <span>Entries per page</span>
+                                </BCol>
+                                <BCol xxl="4" sm="12">
                                     <div class="search-box">
                                         <input
                                             type="text"
-                                            class="form-control search bg-light border-light"
+                                            class="form-control search bg-light border"
                                             placeholder="Search for tasks or something..."
                                             v-model="searchQuery"
                                         />
@@ -554,17 +525,20 @@ export default {
                                             <BButton
                                                 variant="success px-3"
                                                 class="add-btn"
-                                                @click="editDetails(leave)"
+                                                @click="editDetails(task)"
                                             >
                                                 Edit
                                             </BButton>
                                             <BButton
                                                 variant="danger px-3"
                                                 class="add-btn"
-                                                @click="deleteData"
+                                                @click="deleteData(task)"
                                             >
                                                 Delete
                                             </BButton>
+                                            <Link :href="`/task/view/${task.id}`" class="btn btn-info">
+                                                View
+                                            </Link>
                                         </td>
                                     </tr>
                                 </tbody>
@@ -807,7 +781,7 @@ export default {
             size="lg"
             :title="dataEdit ? 'Edit Task' : 'Add Task'"
         >
-            <BFrom id="addform" class="tablelist-form" autocomplete="off">
+            <BFrom id="editform" class="tablelist-form" autocomplete="off">
                 <BRow class="g-3">
                     <BCol lg="12">
                         <label for="projectName-field" class="form-label"
@@ -818,9 +792,9 @@ export default {
                             id="projectName"
                             class="form-control"
                             placeholder="Title"
-                            v-model="event.title"
+                            v-model="editForm.title"
                             :class="{
-                                'is-invalid': submitted && !event.title,
+                                'is-invalid': submitted && !editForm.title,
                             }"
                         />
                         <div class="invalid-feedback">
@@ -839,10 +813,10 @@ export default {
                                 id="tasksDescription"
                                 class="form-control"
                                 placeholder="Description"
-                                v-model="event.description"
+                                v-model="editForm.description"
                                 :class="{
                                     'is-invalid':
-                                        submitted && !event.description,
+                                        submitted && !editForm.description,
                                 }"
                             />
                             <div class="invalid-feedback">
@@ -851,18 +825,25 @@ export default {
                         </div>
                     </BCol>
                     <BCol lg="12">
-                        <label for="attachment-field" class="form-label"
-                            >Attachment</label
-                        >
+                        <div class="mb-2">
+                            <p for="attachment-field" class="form-label"
+                                >Attachment</p
+                            >
+                            <img
+                                :src="editForm.attachment"
+                                alt=""
+                                style="width: 15%; border-radius: 5px;"
+                            />
+                        </div>
                         <input
                             type="file"
                             id="attachment-field"
                             class="form-control"
                             placeholder="Attachment"
-                            @change="handleAttachment"
+                            @change="handleEditFileUpload"
                             :class="{
                                 'is-invalid':
-                                    submitted && !event.attachment.length,
+                                    submitted && !editForm.attachment.length,
                             }"
                             multiple
                         />
@@ -879,9 +860,9 @@ export default {
                             id="createName"
                             class="form-control"
                             placeholder="Deadline"
-                            v-model="event.deadline"
+                            v-model="editForm.deadline"
                             :class="{
-                                'is-invalid': submitted && !event.deadline,
+                                'is-invalid': submitted && !editForm.deadline,
                             }"
                         />
                         <div class="invalid-feedback">
@@ -901,7 +882,7 @@ export default {
                                             type="checkbox"
                                             :value="user.id"
                                             :id="'user-' + user.id"
-                                            v-model="event.assigned_to"
+                                            v-model="editForm.assigned_to"
                                         />
                                         <label
                                             class="form-check-label d-flex align-items-center"
@@ -928,7 +909,7 @@ export default {
                         </simplebar>
                         <div
                             class="invalid-feedback"
-                            v-if="submitted && !event.assigned_to.length"
+                            v-if="submitted && !editForm.assigned_to.length"
                         >
                             Please select at least one assignee.
                         </div>
@@ -939,7 +920,7 @@ export default {
                     <BButton
                         type="button"
                         variant="light"
-                        @click="taskListModal = false"
+                        @click="taskEditModal = false"
                         id="closemodal"
                     >
                         Close
@@ -948,9 +929,9 @@ export default {
                         type="submit"
                         variant="success"
                         id="add-btn"
-                        @click="handleSubmit"
+                        @click="handleUpdateSubmit"
                     >
-                        {{ dataEdit ? "Update" : "Add Task" }}
+                        Update
                     </BButton>
                 </div>
             </BFrom>

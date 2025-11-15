@@ -58,4 +58,74 @@ class TaskController extends Controller
 
         return redirect()->back()->with('success', 'Task created successfully.');
     }
+
+    public function tasksUpdate(Request $request, $id)
+    {
+        $request->validate([
+            'title' => 'required',
+            'description' => 'required',
+            'assigned_to' => 'required|array',
+            'deadline' => 'required|date',
+            'attachment.*' => 'nullable|file|mimes:jpg,jpeg,png,pdf|max:2048',
+        ]);
+
+        $task = Task::find($id);
+        $task->title = $request->title;
+        $task->description = $request->description;
+        $task->deadline = $request->deadline;
+
+        // remove old files and upload new files
+        if ($request->hasFile('attachment')) {
+            if ($task->attachment) {
+                $oldFiles = explode(',', $task->attachment);
+                foreach ($oldFiles as $file) {
+                    if (file_exists(public_path($file))) {
+                        @unlink(public_path($file));
+                    }
+                }
+            }
+
+            $filePaths = [];
+            foreach ($request->file('attachment') as $file) {
+                $filePaths[] = FileUpload::storeFile($file, '/uploads/tasks');
+            }
+            $task->attachment = implode(',', $filePaths);
+        }
+
+        $task->save();
+
+        TaskUser::where('task_id', $task->id)->delete();
+
+        foreach ($request->assigned_to as $userId) {
+            TaskUser::create([
+                'task_id' => $task->id,
+                'assigned_to' => $userId,
+            ]);
+        }
+
+        return redirect()->back()->with('success', 'Task updated successfully.');
+    }
+
+    public function tasksView($id)
+    {
+        $task = Task::with('taskUsers.assignedTo')->find($id);
+        // return $task;
+        return Inertia::render('Tasks/View', compact('task'));
+    }
+
+    public function tasksDestroy($id)
+    {
+        $task = Task::find($id);
+        // remove old files
+        if ($task->attachment) {
+            $oldFiles = explode(',', $task->attachment);
+            foreach ($oldFiles as $file) {
+                if (file_exists(public_path($file))) {
+                    @unlink(public_path($file));
+                }
+            }
+        }
+        $task->delete();
+        return redirect()->back()->with('success', 'Task deleted successfully.');
+    }
 }

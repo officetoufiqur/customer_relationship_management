@@ -128,7 +128,7 @@ class VelzonRoutesController extends Controller
     }
 
     public function tasks_details() {
-        return Inertia::render('apps/tasks/details');
+        return Inertia::render('Tasks/details');
     }
 
     public function tasks_kanban() {

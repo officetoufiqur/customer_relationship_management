@@ -1,5 +1,6 @@
-<script>
-import { Link, Head } from '@inertiajs/vue3';
+<script setup>
+import { ref } from "vue";
+import { Link, Head } from "@inertiajs/vue3";
 import Multiselect from "@vueform/multiselect";
 import "@vueform/multiselect/themes/default.css";
 
@@ -8,27 +9,23 @@ import PageHeader from "@/Components/page-header.vue";
 
 import animationData from "@/Components/widgets/kbtmbyzy.json";
 import Lottie from "@/Components/widgets/lottie.vue";
-import simplebar from "simplebar-vue"
+import simplebar from "simplebar-vue";
 
-export default {
-    data() {
-        return {
-            modalShow: false,
-            value: null,
-            defaultOptions: { animationData: animationData },
-        };
-    },
-    components: {
-        Layout,
-        PageHeader,
-        lottie: Lottie,
-        Multiselect,
-        simplebar,
-        Link,
-    Head
-    },
+// ----------- Reactive State -------------------
+const modalShow = ref(false);
+const value = ref(null);
+
+const defaultOptions = {
+  animationData: animationData,
 };
+
+
+const props = defineProps({
+    task: Object,
+});
+
 </script>
+
 
 <template>
     <Layout>
@@ -42,14 +39,7 @@ export default {
                             <lottie colors="primary:#405189,secondary:#02a8b5" :options="defaultOptions" :height="90"
                                 :width="90" />
                         </div>
-                        <h3 class="mb-1">9 hrs 13 min</h3>
-                        <h5 class="fs-14 mb-4">Profile Page Structure</h5>
-                        <div class="hstack gap-2 justify-content-center">
-                            <BButton variant="danger" size="sm"><i class="ri-stop-circle-line align-bottom me-1"></i>
-                                Stop</BButton>
-                            <BButton variant="success" size="sm"><i class="ri-play-circle-line align-bottom me-1"></i>
-                                Start</BButton>
-                        </div>
+                        <h3 class="mb-1">{{ task.deadline }}</h3>
                     </BCardBody>
                 </BCard>
                 <BCard no-body class="mb-3">
