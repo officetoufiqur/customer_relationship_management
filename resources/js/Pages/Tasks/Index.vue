@@ -17,6 +17,9 @@ import simplebar from "simplebar-vue";
 const props = defineProps({
     users: Array,
     tasks: Array,
+    totalTasks: Number,
+    pendingTasks: Number,
+    completedTasks: Number,
 });
 
 // Data
@@ -243,10 +246,10 @@ const paginate = (tasks) => {
                                 <h2 class="mt-4 ff-secondary fw-semibold">
                                     <count-to
                                         :startVal="0"
-                                        :endVal="234"
+                                        :endVal="totalTasks"
                                         :duration="5000"
                                     ></count-to
-                                    >k
+                                    >
                                 </h2>
                             </div>
                             <div>
@@ -273,10 +276,10 @@ const paginate = (tasks) => {
                                 <h2 class="mt-4 ff-secondary fw-semibold">
                                     <count-to
                                         :startVal="0"
-                                        :endVal="64"
+                                        :endVal="pendingTasks"
                                         :duration="5000"
                                     ></count-to
-                                    >k
+                                    >
                                 </h2>
                             </div>
                             <div>
@@ -303,10 +306,10 @@ const paginate = (tasks) => {
                                 <h2 class="mt-4 ff-secondary fw-semibold">
                                     <count-to
                                         :startVal="0"
-                                        :endVal="116"
+                                        :endVal="completedTasks"
                                         :duration="5000"
                                     ></count-to
-                                    >K
+                                    >
                                 </h2>
                             </div>
                             <div>

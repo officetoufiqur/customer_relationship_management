@@ -12,6 +12,7 @@ import Lottie from "@/Components/widgets/lottie.vue";
 import simplebar from "simplebar-vue";
 import VueCountdown from "@chenfengyuan/vue-countdown";
 import { computed } from "vue";
+import Swal from "sweetalert2";
 
 // ----------- Reactive State -------------------
 const modalShow = ref(false);
@@ -34,17 +35,45 @@ const remainingTime = computed(() => {
     return diff > 0 ? diff : 0;
 });
 
+// const optionData = ref("delay");
+
 const form = useForm({
-    id: '',
-    delay_reason: '',
-    transferred_notes: '',
-    transferred_to: '',
-})
+    task_id: "",
+    user_id: "",
+    delay_reason: "",
+    transferred_note: "",
+    transferred_to: [],
+    optionData: "delay",
+});
+
 const editReassignModal = ref(false);
-const editReassign = (task) => {
+
+const editReassign = (task, userId) => {
     editReassignModal.value = true;
+
+    form.task_id = task.id;
+    form.user_id = userId;
+
+    form.delay_reason = task.delay_reason;
+    form.transferred_note = task.transferred_note;
+    form.transferred_to = [];
+    form.option = form.optionData; 
 };
 
+
+const handleUpdateSubmit = () => {
+    form.post(`/task/reassign/update/${form.task_id}`, {
+        onSuccess: () => {
+            Swal.fire(
+                "Updated!",
+                "Employee Reassign or delay updated successfully",
+                "success"
+            );
+            editReassignModal.value = false;
+            form.reset();
+        },
+    });
+};
 </script>
 
 <template>
@@ -114,27 +143,14 @@ const editReassign = (task) => {
                             <h6 class="card-title mb-0 flex-grow-1">
                                 Assigned To
                             </h6>
-                            <div class="flex-shrink-0">
-                                <BButton
-                                    type="button"
-                                    variant="soft-danger"
-                                    size="sm"
-                                    @click="modalShow = !modalShow"
-                                >
-                                    <i
-                                        class="ri-share-line me-1 align-bottom"
-                                    ></i>
-                                    Assigned Member
-                                </BButton>
-                            </div>
                         </div>
                         <ul class="list-unstyled vstack gap-3 mb-0">
                             <li v-for="item in task.users" :key="item.id">
                                 <div class="d-flex align-items-center">
                                     <div class="flex-shrink-0">
                                         <img
-                                            v-if="item.employee.image"
-                                            :src="item.employee.image"
+                                            v-if="item.employee?.image"
+                                            :src="item.employee?.image"
                                             alt=""
                                             class="avatar-xs rounded-circle"
                                         />
@@ -148,7 +164,7 @@ const editReassign = (task) => {
                                     <div class="flex-grow-1 ms-2">
                                         <h6 class="mb-1">{{ item.name }}</h6>
                                         <p class="text-muted mb-0">
-                                            {{ item.employee.position }}
+                                            {{ item.employee?.position }}
                                         </p>
                                     </div>
                                     <div class="flex-shrink-0">
@@ -285,6 +301,7 @@ const editReassign = (task) => {
                                     <th scope="col">ID</th>
                                     <th scope="col">Name</th>
                                     <th scope="col">Position</th>
+                                    <th scope="col">Status</th>
                                     <th scope="col">Action</th>
                                 </tr>
                             </thead>
@@ -294,12 +311,32 @@ const editReassign = (task) => {
                                         {{ item.id }}
                                     </th>
                                     <td>{{ item.name }}</td>
-                                    <td>{{ item.employee.position }}</td>
+                                    <td>{{ item.employee?.position || "N/A" }}</td>
+                                    <td class="status">
+                                            <span
+                                                class="badge text-uppercase"
+                                                :class="{
+                                                    'bg-secondary-subtle text-secondary':
+                                                        task.status ==
+                                                        'in_progress',
+                                                    'bg-info-subtle text-info':
+                                                        task.status ==
+                                                        'delayed',
+                                                    'bg-success-subtle text-success':
+                                                        task.status ==
+                                                        'completed',
+                                                    'bg-warning-subtle text-warning':
+                                                        task.status ==
+                                                        'pending',
+                                                }"
+                                                >{{ task.status }}</span
+                                            >
+                                        </td>
                                     <td>
                                         <BButton
                                             variant="success px-3"
                                             class="add-btn"
-                                            @click="editReassign(task)"
+                                            @click="editReassign(task, item.id)"
                                         >
                                             Delay/Reassign
                                         </BButton>
@@ -311,7 +348,6 @@ const editReassign = (task) => {
                 </BCard>
             </BCol>
         </BRow>
-
 
         <!-- task edit modal -->
         <BModal
@@ -329,10 +365,22 @@ const editReassign = (task) => {
                 <BRow class="g-3">
                     <BCol lg="12">
                         <label for="projectName-field" class="form-label"
+                            >Select Option</label
+                        >
+                        <select
+                            v-model="form.optionData"
+                            class="form-select shadow-none cursor-pointer"
+                        >
+                            <option selected>Select Option</option>
+                            <option value="delay">Delay</option>
+                            <option value="reassign">Reassign</option>
+                        </select>
+                    </BCol>
+                    <BCol v-if="form.optionData == 'delay'" lg="12">
+                        <label for="projectName-field" class="form-label"
                             >Delay Reason</label
                         >
-                        <input
-                            type="text"
+                        <textarea
                             id="projectName"
                             class="form-control"
                             placeholder="delay reason"
@@ -340,74 +388,68 @@ const editReassign = (task) => {
                             :class="{
                                 'is-invalid': submitted && !form.delay_reason,
                             }"
-                        />
+                        ></textarea>
                         <div class="invalid-feedback">
                             Please enter a title.
                         </div>
                     </BCol>
-                    <BCol lg="12">
-                        <label for="projectName-field" class="form-label"
-                            >Transferred Notes</label
-                        >
-                        <input
-                            type="text"
-                            id="projectName"
-                            class="form-control"
-                            placeholder="transferred notes"
-                            v-model="form.delay_reason"
-                            :class="{
-                                'is-invalid': submitted && !form.delay_reason,
-                            }"
-                        />
-                        <div class="invalid-feedback">
-                            Please enter a title.
-                        </div>
-                    </BCol>
-                    <BCol lg="12">
-                        <label class="form-label">Transferred To</label>
-                        <simplebar data-simplebar style="height: 120px">
-                            <ul class="list-unstyled vstack gap-2 mb-0">
-                                <li v-for="user in task.users" :key="user.id">
-                                    <div
-                                        class="form-check d-flex align-items-center"
+                    <div v-if="form.optionData == 'reassign'">
+                        <BCol lg="12">
+                            <label for="projectName-field" class="form-label"
+                                >Transferred Notes</label
+                            >
+                            <textarea
+                                id="projectName"
+                                class="form-control"
+                                placeholder="transferred notes"
+                                v-model="form.transferred_note"
+                                :class="{
+                                    'is-invalid':
+                                        submitted && !form.transferred_note,
+                                }"
+                            ></textarea>
+                            <div class="invalid-feedback">
+                                Please enter a title.
+                            </div>
+                        </BCol>
+                        <BCol lg="12" class="mt-3">
+                            <label class="form-label">Transferred To</label>
+                            <simplebar data-simplebar style="height: 120px">
+                                <ul class="list-unstyled vstack gap-2 mb-0">
+                                    <li
+                                        v-for="user in task.users"
+                                        :key="user.id"
                                     >
-                                        <input
-                                            class="form-check-input me-3"
-                                            type="checkbox"
-                                            :value="user.id"
-                                            :id="'user-' + user.id"
-                                            v-model="form.transferred_to"
-                                        />
-                                        <label
-                                            class="form-check-label d-flex align-items-center"
-                                            :for="'user-' + user.id"
+                                        <div
+                                            class="form-check d-flex align-items-center"
                                         >
-                                            <span class="flex-shrink-0">
-                                                <img
-                                                    :src="
-                                                        user.profile_photo_url ||
-                                                        'https://ui-avatars.com/api/?name=' +
-                                                            user.name
-                                                    "
-                                                    alt=""
-                                                    class="avatar-xxs rounded-circle"
-                                                />
-                                            </span>
-                                            <span class="flex-grow-1 ms-2">{{
-                                                user.name
-                                            }}</span>
-                                        </label>
-                                    </div>
-                                </li>
-                            </ul>
-                        </simplebar>
-                        <div
-                            class="invalid-feedback"
-                            v-if="submitted && !form.transferred_to.length"
-                        >
-                            Please select at least one assignee.
-                        </div>
-                    </BCol>
+                                            <input
+                                                class="form-check-input me-2"
+                                                type="checkbox"
+                                                :value="user.id"
+                                                :id="'user-' + user.id"
+                                                v-model="form.transferred_to"
+                                            />
+                                            <label
+                                                class="form-check-label d-flex align-items-center"
+                                                :for="'user-' + user.id"
+                                            >
+                                                <span class="flex-grow-1">{{
+                                                    user.name
+                                                }}</span>
+                                            </label>
+                                        </div>
+                                    </li>
+                                </ul>
+                            </simplebar>
+                            <div
+                                class="invalid-feedback"
+                                v-if="submitted && !form.transferred_to.length"
+                            >
+                                Please select at least one assignee.
+                            </div>
+                        </BCol>
+                    </div>
                 </BRow>
 
                 <div class="hstack gap-2 justify-content-end mt-3">
@@ -429,233 +471,6 @@ const editReassign = (task) => {
                     </BButton>
                 </div>
             </BFrom>
-        </BModal>
-
-
-
-        <BModal
-            v-model="modalShow"
-            hide-footer
-            title="Team Members"
-            body-class="p-4"
-            content-class="border-0"
-            header-class="p-3 ps-4 bg-success-subtle"
-            class="v-modal-custom"
-            centered
-        >
-            <div class="search-box mb-3">
-                <input
-                    type="text"
-                    class="form-control bg-light border-light"
-                    placeholder="Search here..."
-                />
-                <i class="ri-search-line search-icon"></i>
-            </div>
-
-            <div class="mb-4 d-flex align-items-center">
-                <div class="me-2">
-                    <h5 class="mb-0 fs-13">Members :</h5>
-                </div>
-                <div class="avatar-group justify-content-center">
-                    <BLink
-                        href="javascript: void(0);"
-                        class="avatar-group-item"
-                        v-b-tooltip.hover
-                        title="Tonya Noble"
-                    >
-                        <div class="avatar-xs">
-                            <img
-                                src="@assets/images/users/avatar-10.jpg"
-                                alt=""
-                                class="rounded-circle img-fluid"
-                            />
-                        </div>
-                    </BLink>
-                    <BLink
-                        href="javascript: void(0);"
-                        class="avatar-group-item"
-                        v-b-tooltip.hover
-                        title="Thomas Taylor"
-                    >
-                        <div class="avatar-xs">
-                            <img
-                                src="@assets/images/users/avatar-8.jpg"
-                                alt=""
-                                class="rounded-circle img-fluid"
-                            />
-                        </div>
-                    </BLink>
-                    <BLink
-                        href="javascript: void(0);"
-                        class="avatar-group-item"
-                        v-b-tooltip.hover
-                        title="Nancy Martino"
-                    >
-                        <div class="avatar-xs">
-                            <img
-                                src="@assets/images/users/avatar-2.jpg"
-                                alt=""
-                                class="rounded-circle img-fluid"
-                            />
-                        </div>
-                    </BLink>
-                </div>
-            </div>
-            <div class="mx-n4 px-4" data-simplebar style="max-height: 225px">
-                <div class="vstack gap-3">
-                    <div class="d-flex align-items-center">
-                        <div class="avatar-xs flex-shrink-0 me-3">
-                            <img
-                                src="@assets/images/users/avatar-2.jpg"
-                                alt=""
-                                class="img-fluid rounded-circle"
-                            />
-                        </div>
-                        <div class="flex-grow-1">
-                            <h5 class="fs-13 mb-0">
-                                <BLink
-                                    href="javascript:void(0);"
-                                    class="text-body d-block"
-                                    >Nancy Martino
-                                </BLink>
-                            </h5>
-                        </div>
-                        <div class="flex-shrink-0">
-                            <BButton type="button" variant="light" size="sm"
-                                >Add</BButton
-                            >
-                        </div>
-                    </div>
-                    <div class="d-flex align-items-center">
-                        <div class="avatar-xs flex-shrink-0 me-3">
-                            <div
-                                class="avatar-title bg-danger-subtle text-danger rounded-circle"
-                            >
-                                HB
-                            </div>
-                        </div>
-                        <div class="flex-grow-1">
-                            <h5 class="fs-13 mb-0">
-                                <BLink
-                                    href="javascript:void(0);"
-                                    class="text-body d-block"
-                                    >Henry Baird
-                                </BLink>
-                            </h5>
-                        </div>
-                        <div class="flex-shrink-0">
-                            <BButton type="button" variant="light" size="sm"
-                                >Add</BButton
-                            >
-                        </div>
-                    </div>
-                    <div class="d-flex align-items-center">
-                        <div class="avatar-xs flex-shrink-0 me-3">
-                            <img
-                                src="@assets/images/users/avatar-3.jpg"
-                                alt=""
-                                class="img-fluid rounded-circle"
-                            />
-                        </div>
-                        <div class="flex-grow-1">
-                            <h5 class="fs-13 mb-0">
-                                <BLink
-                                    href="javascript:void(0);"
-                                    class="text-body d-block"
-                                    >Frank Hook
-                                </BLink>
-                            </h5>
-                        </div>
-                        <div class="flex-shrink-0">
-                            <BButton type="button" variant="light" size="sm"
-                                >Add</BButton
-                            >
-                        </div>
-                    </div>
-                    <div class="d-flex align-items-center">
-                        <div class="avatar-xs flex-shrink-0 me-3">
-                            <img
-                                src="@assets/images/users/avatar-4.jpg"
-                                alt=""
-                                class="img-fluid rounded-circle"
-                            />
-                        </div>
-                        <div class="flex-grow-1">
-                            <h5 class="fs-13 mb-0">
-                                <BLink
-                                    href="javascript:void(0);"
-                                    class="text-body d-block"
-                                    >Jennifer Carter
-                                </BLink>
-                            </h5>
-                        </div>
-                        <div class="flex-shrink-0">
-                            <BButton type="button" variant="light" size="sm"
-                                >Add</BButton
-                            >
-                        </div>
-                    </div>
-                    <div class="d-flex align-items-center">
-                        <div class="avatar-xs flex-shrink-0 me-3">
-                            <div
-                                class="avatar-title bg-success-subtle text-success rounded-circle"
-                            >
-                                AC
-                            </div>
-                        </div>
-                        <div class="flex-grow-1">
-                            <h5 class="fs-13 mb-0">
-                                <BLink
-                                    href="javascript:void(0);"
-                                    class="text-body d-block"
-                                    >Alexis Clarke
-                                </BLink>
-                            </h5>
-                        </div>
-                        <div class="flex-shrink-0">
-                            <BButton type="button" variant="light" size="sm"
-                                >Add</BButton
-                            >
-                        </div>
-                    </div>
-                    <div class="d-flex align-items-center">
-                        <div class="avatar-xs flex-shrink-0 me-3">
-                            <img
-                                src="@assets/images/users/avatar-7.jpg"
-                                alt=""
-                                class="img-fluid rounded-circle"
-                            />
-                        </div>
-                        <div class="flex-grow-1">
-                            <h5 class="fs-13 mb-0">
-                                <BLink
-                                    href="javascript:void(0);"
-                                    class="text-body d-block"
-                                    >Joseph Parker
-                                </BLink>
-                            </h5>
-                        </div>
-                        <div class="flex-shrink-0">
-                            <BButton type="button" variant="light" size="sm"
-                                >Add</BButton
-                            >
-                        </div>
-                    </div>
-                </div>
-            </div>
-            <div class="modal-footer v-modal-footer">
-                <BButton
-                    type="button"
-                    variant="light"
-                    class="w-xs"
-                    @click="modalShow = false"
-                >
-                    Cancel</BButton
-                >
-                <BButton type="button" variant="success" class="w-xs"
-                    >Assigned</BButton
-                >
-            </div>
         </BModal>
     </Layout>
 </template>

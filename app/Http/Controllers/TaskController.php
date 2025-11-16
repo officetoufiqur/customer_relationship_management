@@ -18,8 +18,11 @@ class TaskController extends Controller
         $tasks = Task::with('taskUsers.assignedTo')->get();
         $users = User::select('id', 'name', 'profile_photo_path')->get();
 
-        // return $tasks;
-        return Inertia::render('Tasks/Index', compact('tasks', 'users'));
+        $totalTasks = Task::count();
+        $pendingTasks = Task::where('status', 'pending')->count();
+        $completedTasks = Task::where('status', 'completed')->count();
+        // return $totalTasks;
+        return Inertia::render('Tasks/Index', compact('tasks', 'users', 'totalTasks', 'pendingTasks', 'completedTasks'));
     }
 
     public function tasksStore(Request $request)
@@ -138,7 +141,8 @@ class TaskController extends Controller
 
             // users clean
             'users' => $task->taskUsers->map(function ($user) {
-                $employee = Employee::where('user_id', $user->assignedTo->id)->select('id','position','image')->first();
+                $employee = Employee::where('user_id', $user->assignedTo->id)->select('id', 'position', 'image')->first();
+
                 return [
                     'id' => $user->assignedTo->id,
                     'name' => $user->assignedTo->name,
@@ -153,6 +157,39 @@ class TaskController extends Controller
         return Inertia::render('Tasks/View', [
             'task' => $cleanTask,
         ]);
+    }
+
+    public function reassign(Request $request, $id)
+    {
+        $task = TaskUser::where('task_id', $id)
+            ->where('assigned_to', $request->user_id)
+            ->first();
+
+        if (! $task) {
+            return back()->with('error', 'Original task not found.');
+        }
+
+        if ($request->optionData === 'delay') {
+            $task->delay_reason = $request->delay_reason;
+            $task->save();
+        }
+
+        if ($request->optionData === 'reassign') {
+            $task->delete();
+
+            foreach ($request->transferred_to as $userId) {
+                TaskUser::create([
+                    'task_id' => $request->task_id,
+                    'assigned_to' => $userId,
+                    'delay_reason' => null,
+                    'transferred_note' => $request->transferred_note,
+                    'status' => 'pending',
+                    'transferred_to' => $request->user_id,
+                ]);
+            }
+        }
+
+        return back()->with('success', 'Task updated successfully.');
     }
 
     public function tasksDestroy($id)
