@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Controllers\CompanyController;
 use App\Http\Controllers\EmployeeController;
 use App\Http\Controllers\LeaveController;
 use App\Http\Controllers\TaskController;
@@ -41,6 +42,14 @@ Route::middleware(['auth:sanctum', config('jetstream.auth_session'), 'verified',
         Route::delete("/tasks/destroy/{id}", "tasksDestroy")->name("tasks.destroy");
         Route::post('/task/reassign/update/{id}', 'reassign')->name('task.reassign');
     });
+    
+    Route::controller(CompanyController::class)->group(function () {
+        Route::get("/companies/list", "companyList")->name("company.list");
+        Route::post("/companys/store", "companysStore")->name("companys.store");
+        Route::post("/company/update/{id}", "companysUpdate")->name("companys.update");
+        Route::delete("/company/destroy/{id}", "companysDestroy")->name("companys.destroy");
+    });
+
 
     Route::controller(VelzonRoutesController::class)->group(function () {
 
