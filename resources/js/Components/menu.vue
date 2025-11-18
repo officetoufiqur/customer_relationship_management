@@ -203,6 +203,13 @@ onMounted(() => {
                     </Link>
                 </li>
 
+                <li class="nav-item">
+                    <Link class="nav-link menu-link" href="/client/list">
+                        <i class="ri-apps-2-line"></i>
+                        <span data-key="t-clients">Clients</span>
+                    </Link>
+                </li>
+
                 <!-- end Dashboard Menu -->
                 <li class="nav-item">
                     <a

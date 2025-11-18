@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Controllers\ClientProfileController;
 use App\Http\Controllers\CompanyController;
 use App\Http\Controllers\EmployeeController;
 use App\Http\Controllers\LeaveController;
@@ -48,6 +49,13 @@ Route::middleware(['auth:sanctum', config('jetstream.auth_session'), 'verified',
         Route::post("/companys/store", "companysStore")->name("companys.store");
         Route::post("/company/update/{id}", "companysUpdate")->name("companys.update");
         Route::delete("/company/destroy/{id}", "companysDestroy")->name("companys.destroy");
+    });
+
+       Route::controller(ClientProfileController::class)->group(function () {
+        Route::get("/client/list", "clientList")->name("client.list");
+        Route::post("/clients/store", "clientsStore")->name("clients.store");
+        Route::post("/client/update/{id}", "clientUpdate")->name("client.update");
+        Route::delete("/client/destroy/{id}", "clientDestroy")->name("client.destroy");
     });
 
 
