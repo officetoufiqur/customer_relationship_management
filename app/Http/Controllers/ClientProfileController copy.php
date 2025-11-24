@@ -4,7 +4,6 @@ namespace App\Http\Controllers;
 
 use App\Helpers\FileUpload;
 use App\Models\Client;
-use App\Models\ClientInteraction;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
 
@@ -13,12 +12,11 @@ class ClientProfileController extends Controller
     public function clientList()
     {
         $newLeads = Client::where('follow_up_status', 'pending')->count();
-        $quotationsSent = ClientInteraction::where('quotation_sent_status', true)->count();
+        $quotationsSent = Client::where('quotation_sent_status', true)->count();
         $closedDeals = Client::where('follow_up_status', 'approved')->count();
         $lostDeals = Client::where('follow_up_status', 'lost')->count();
 
-        $clients = Client::with('clientInteractions')->get();
-        // return $clients;
+        $clients = Client::all();
 
         return Inertia::render('Client/Index', compact('clients', 'newLeads', 'quotationsSent', 'closedDeals', 'lostDeals'));
     }
@@ -31,8 +29,12 @@ class ClientProfileController extends Controller
             'email' => 'required|string|email|unique:clients|max:255',
             'whatsapp' => 'required|string|max:255',
             'source_of_lead' => 'required|string|max:255',
-            'service_type' => 'required|string|max:255'
+            'service_type' => 'required|string|max:255',
+            'follow_up_status' => 'required|string|max:255',
+            'project_cost' => 'required|max:255',
         ]);
+
+        $filePath = FileUpload::storeFile($request->file('documents'), 'uploads/clients');
 
         $client = new Client();
 
@@ -42,17 +44,16 @@ class ClientProfileController extends Controller
         $client->whatsapp = $request->whatsapp;
         $client->source_of_lead = $request->source_of_lead;
         $client->service_type = $request->service_type;
-        $client->follow_up_status = 'pending';
+        $client->follow_up_status = $request->follow_up_status;
+        $client->project_cost = $request->project_cost;
+        $client->client_interaction = $request->client_interaction;
+        $client->follow_date = $request->follow_date;
+        $client->documents = $filePath;
 
         $client->save();
 
-        ClientInteraction::create([
-            'client_id' => $client->id
-        ]);
-
         return redirect()->back()->with('success', 'Client created successfully.');
     }
-
 
     public function clientUpdate(Request $request, $id)
     {
@@ -62,55 +63,15 @@ class ClientProfileController extends Controller
             'email' => 'required|string|max:255',
             'whatsapp' => 'required|string|max:255',
             'source_of_lead' => 'required|string|max:255',
-            'service_type' => 'required|string|max:255'
+            'service_type' => 'required|string|max:255',
+            'follow_up_status' => 'required|string|max:255',
+            'client_interaction' => 'required|string|max:255',
+            'project_cost' => 'required|max:255',
+            'follow_date' => 'required|date|max:255',
+            'documents' => 'nullable|file|mimes:jpg,jpeg,png,pdf|max:2048',
         ]);
 
         $client = Client::find($id);
-
-        $client->name = $request->name;
-        $client->phone = $request->phone;
-        $client->email = $request->email;
-        $client->whatsapp = $request->whatsapp;
-        $client->source_of_lead = $request->source_of_lead;
-        $client->service_type = $request->service_type;
-
-        $client->save();
-
-        return redirect()->back()->with('success', 'Client updated successfully.');
-    }
-
-    public function clientDestroy($id)
-    {
-        $client = Client::find($id);
-        $client->delete();
-
-        return redirect()->back()->with('success', 'Client deleted successfully.');
-    }
-
-    public function clientIntractionList()
-    {
-        $clientInteractions = ClientInteraction::with('client')->get();
-
-        $todayContact = ClientInteraction::where('follow_up_date', date('Y-m-d'))->count();
-        // return $todayContact;
-        // return $clientInteractions;
-        return Inertia::render('Client/Interaction/Index', compact('clientInteractions', 'todayContact'));
-    }
-
-    public function clientQuotation(Request $request, $id)
-    {
-        $client = ClientInteraction::find($id);
-
-        // $request->validate([
-        //     'client_interaction_type' => 'required|string|max:255',
-        //     'project_cost' => 'required|max:255',
-        //     'follow_up_date' => 'required|string|max:255',
-        //     'notes' => 'required|date|max:255',
-        //     'documents' => 'nullable|file|mimes:jpg,jpeg,png,pdf|max:2048',
-        // ]);
-
-        // return $request->all();
-
 
         if ($request->hasFile('documents')) {
             if ($client->documents && file_exists(public_path(ltrim($client->documents, '/')))) {
@@ -121,17 +82,30 @@ class ClientProfileController extends Controller
             $client->documents = $imagePath;
         }
 
+        $client->name = $request->name;
+        $client->phone = $request->phone;
+        $client->email = $request->email;
+        $client->whatsapp = $request->whatsapp;
+        $client->source_of_lead = $request->source_of_lead;
+        $client->service_type = $request->service_type;
+        $client->follow_up_status = $request->follow_up_status;
+        $client->client_interaction = $request->client_interaction;
+        $client->project_cost = $request->project_cost;
+        $client->follow_date = $request->follow_date;
 
-        $client->client_interaction_type = $request->client_interaction_type;
-        $client->follow_up_date = $request->follow_up_date;
-        $client->notes = $request->notes;
-        $client->quotation_sent_status = true;
         $client->save();
-        
-        $client->client->follow_up_status = $request->follow_up_status;
-        $client->client->project_cost = $request->project_cost;
-        $client->client->save();
 
-        return redirect()->back()->with('success', 'Client interaction updated successfully.');
+        return redirect()->back()->with('success', 'Client updated successfully.');
+    }
+
+    public function clientDestroy($id)
+    {
+        $client = Client::find($id);
+        if ($client->documents && file_exists(public_path(ltrim($client->documents, '/')))) {
+            unlink(public_path(ltrim($client->documents, '/')));
+        }
+        $client->delete();
+
+        return redirect()->back()->with('success', 'Client deleted successfully.');
     }
 }

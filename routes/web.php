@@ -56,6 +56,10 @@ Route::middleware(['auth:sanctum', config('jetstream.auth_session'), 'verified',
         Route::post("/clients/store", "clientsStore")->name("clients.store");
         Route::post("/client/update/{id}", "clientUpdate")->name("client.update");
         Route::delete("/client/destroy/{id}", "clientDestroy")->name("client.destroy");
+        
+        
+        Route::get("/client/intractions/list", "clientIntractionList")->name("client.intraction.list");
+        Route::post("/client/quotation/{id}", "clientQuotation")->name("client.quotation");
     });
 
 

@@ -204,10 +204,35 @@ onMounted(() => {
                 </li>
 
                 <li class="nav-item">
-                    <Link class="nav-link menu-link" href="/client/list">
+                    <a
+                        class="nav-link menu-link"
+                        href="#sidebarclient"
+                        data-bs-toggle="collapse"
+                        role="button"
+                        aria-expanded="false"
+                        aria-controls="sidebarclient"
+                    >
                         <i class="ri-apps-2-line"></i>
-                        <span data-key="t-clients">Clients</span>
-                    </Link>
+                        <span data-key="t-client">Client Management</span>
+                    </a>
+                    <div class="collapse menu-dropdown" id="sidebarclient">
+                        <ul class="nav nav-sm flex-column">
+                           <li class="nav-item">
+                                <Link class="nav-link menu-link" href="/client/list">
+                                    <span data-key="t-clients">Clients</span>
+                                </Link>
+                            </li>
+                            <li class="nav-item">
+                                <Link
+                                    href="/client/intractions/list"
+                                    class="nav-link"
+                                    data-key="t-settings"
+                                >
+                                    Client Quotation
+                                </Link>
+                            </li>
+                        </ul>
+                    </div>
                 </li>
 
                 <!-- end Dashboard Menu -->

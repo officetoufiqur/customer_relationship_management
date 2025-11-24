@@ -1,13 +1,18 @@
 <script setup>
 import Layout from "@/Layouts/main.vue";
 import PageHeader from "@/Components/page-header.vue";
-import { ref, computed, watch, onMounted } from "vue";
+import { ref, computed, watch, onMounted, nextTick } from "vue";
 import { Link, useForm } from "@inertiajs/vue3";
+import { CountTo } from "vue3-count-to";
 import Swal from "sweetalert2";
 import $ from "jquery";
 
 const props = defineProps({
     clients: Array,
+    newLeads: Number,
+    quotationsSent: Number,
+    closedDeals: Number,
+    lostDeals: Number,
 });
 
 // ========== base form ==========
@@ -20,11 +25,7 @@ const baseForm = ref({
     source_of_lead: "",
     service_type: "",
     follow_up_status: "",
-    client_interaction: "",
     project_cost: "",
-    documents: "",
-    quotation_sent_status: "",
-    follow_date: "",
 });
 
 const form = useForm({ ...baseForm.value });
@@ -39,7 +40,6 @@ const tableHeaders = [
     { key: "whatsapp", label: "Whatsapp", sortable: true },
     { key: "source_of_lead", label: "Source Of Lead", sortable: true },
     { key: "project_cost", label: "Project Cost", sortable: true },
-    { key: "follow_date", label: "Follow Up Date", sortable: true },
     { key: "follow_up_status", label: "Follow Up Status", sortable: true },
     { key: "actions", label: "Actions", sortable: false },
 ];
@@ -58,7 +58,7 @@ const filteredData = computed(() => {
                 (c.email || "").toLowerCase().includes(s) ||
                 (c.phone || "").toLowerCase().includes(s) ||
                 (c.whatsapp || "").toLowerCase().includes(s) ||
-                (c.follow_date || "").toLowerCase().includes(s)
+                (c.follow_up_status || "").toLowerCase().includes(s)
             );
         });
     }
@@ -81,11 +81,6 @@ const toggleCreateModal = ref(false);
 
 const clientCreateModal = () => {
     toggleCreateModal.value = true;
-};
-
-const handleDocuments = (e) => {
-    const file = e.target.files && e.target.files[0] ? e.target.files[0] : null;
-    form.documents = file;
 };
 
 const handleSubmit = async () => {
@@ -113,26 +108,19 @@ const handleSubmit = async () => {
 
 // ============== Edit modal ==============
 const toggleEditModal = ref(false);
-const handleEditFileUpload = (e) => {
-    editForm.documents = e.target.files[0];
-};
 
 const editModal = (client) => {
     toggleEditModal.value = true;
 
     editForm.id = client.id;
-    editForm.name = client.name
-    editForm.phone = client.phone
-    editForm.email = client.email
-    editForm.whatsapp = client.whatsapp
-    editForm.source_of_lead = client.source_of_lead
-    editForm.service_type = client.service_type
-    editForm.follow_up_status = client.follow_up_status
-    editForm.client_interaction = client.client_interaction
-    editForm.project_cost = client.project_cost
-    editForm.documents = client.documents
-    editForm.quotation_sent_status = client.quotation_sent_status
-    editForm.follow_date = client.follow_date
+    editForm.name = client.name;
+    editForm.phone = client.phone;
+    editForm.email = client.email;
+    editForm.whatsapp = client.whatsapp;
+    editForm.source_of_lead = client.source_of_lead;
+    editForm.service_type = client.service_type;
+    editForm.project_cost = client.project_cost;
+    editForm.follow_up_status = client.follow_up_status;
 };
 
 const handleUpdateSubmit = () => {
@@ -141,6 +129,75 @@ const handleUpdateSubmit = () => {
             Swal.fire("Updated!", "client updated successfully", "success");
             toggleEditModal.value = false;
             editForm.reset();
+        },
+    });
+};
+
+// ============== quatation modal ==============
+const quatationForm = useForm({
+    id: "",
+    client_interaction_type: "",
+    project_cost: "",
+    follow_up_date: "",
+    follow_up_status: "",
+    quotation_sent_status: "",
+    notes: "",
+    documents: null,
+});
+
+const toggleQuotationModal = ref(false);
+
+const quotationModal = (client) => {
+    toggleQuotationModal.value = true;
+
+    const ci = client.client_interactions ?? {};
+
+    quatationForm.id = client.id;
+    quatationForm.client_interaction_type = ci.client_interaction_type ?? '';
+    quatationForm.project_cost = client.project_cost ?? '';
+    quatationForm.follow_up_date = ci.follow_up_date ?? '';
+    quatationForm.follow_up_status = client.follow_up_status ?? '';
+    quatationForm.quotation_sent_status = ci.quotation_sent_status ?? '';
+    quatationForm.notes = ci.notes ?? '';
+    quatationForm.documents = ci.documents ?? '';
+
+     nextTick(() => {
+        const dr = $(".imageFile").dropify({
+            defaultFile: quatationForm.documents || "",
+            messages: {
+                default: "Drag and drop a file here or click",
+                replace: "Drag and drop or click to replace",
+                remove: "Remove",
+                error: "Oops, something went wrong.",
+            },
+        });
+
+        // Destroy old instance and re-init
+        const drInstance = dr.data('dropify');
+        drInstance.destroy();
+        drInstance.init();
+    });
+};
+
+
+const handleEditFileUpload = (e) => {
+    quatationForm.documents = e.target.files[0];
+};
+
+const handleQuotationSubmit = () => {
+    if (!quatationForm.client_interaction_type || !quatationForm.project_cost || !quatationForm.follow_up_date) {
+        Swal.fire(
+            "Validation Error",
+            "Please fill all required fields",
+            "warning"
+        );
+        return;
+    }
+    quatationForm.post(`/client/quotation/${quatationForm.id}`, {
+        onSuccess: () => {
+            Swal.fire("Updated!", "Quotation sent successfully", "success");
+            toggleQuotationModal.value = false;
+            quatationForm.reset();
         },
     });
 };
@@ -179,18 +236,14 @@ const toggleViewModal = ref(false);
 const viewModal = (client) => {
     toggleViewModal.value = true;
     editForm.id = client.id;
-    editForm.name = client.name
-    editForm.phone = client.phone
-    editForm.email = client.email
-    editForm.whatsapp = client.whatsapp
-    editForm.source_of_lead = client.source_of_lead
-    editForm.service_type = client.service_type
-    editForm.follow_up_status = client.follow_up_status
-    editForm.client_interaction = client.client_interaction
-    editForm.project_cost = client.project_cost
-    editForm.documents = client.documents
-    editForm.quotation_sent_status = client.quotation_sent_status
-    editForm.follow_date = client.follow_date
+    editForm.name = client.name;
+    editForm.phone = client.phone;
+    editForm.email = client.email;
+    editForm.whatsapp = client.whatsapp;
+    editForm.source_of_lead = client.source_of_lead;
+    editForm.service_type = client.service_type;
+    editForm.follow_up_status = client.follow_up_status;
+    editForm.project_cost = client.project_cost;
 };
 
 // ============== PAGINATION ==============
@@ -219,47 +272,130 @@ const onSort = (key) => {
     }
 };
 
-// ===== dropify =====
-const initDropify = () => {
-    $(".dropify").dropify({
-        messages: {
-            default: "Drag and drop a file here or click",
-            replace: "Drag and drop or click to replace",
-            remove: "Remove",
-            error: "Oops, something went wrong.",
-        },
-    });
-};
-
-const editDropify = () => {
-    $(".imageFile").dropify({
-        defaultFile: editForm.documents || "",
-        messages: {
-            default: "Drag and drop a file here or click",
-            replace: "Drag and drop or click to replace",
-            remove: "Remove",
-            error: "Oops, something went wrong.",
-        },
-    });
-};
-
-onMounted(() => {
-    initDropify();
-    editDropify();
-});
-
 // Reset page when search changes
 watch(searchQuery, () => {
     page.value = 1;
 });
-
-
-
 </script>
 
 <template>
     <Layout>
         <PageHeader title="List View" pageTitle="clients" />
+
+        <BRow>
+            <BCol xxl="3" sm="6">
+                <BCard no-body class="card-animate">
+                    <BCardBody>
+                        <div class="d-flex justify-content-between mx-3">
+                            <div>
+                                <p class="fw-medium text-muted mb-0">
+                                    New Leads
+                                </p>
+                                <h2 class="mt-4 ff-secondary fw-semibold">
+                                    <count-to
+                                        :startVal="0"
+                                        :endVal="newLeads"
+                                    ></count-to>
+                                </h2>
+                            </div>
+                            <div>
+                                <div class="avatar-sm flex-shrink-0">
+                                    <span
+                                        class="avatar-title bg-info-subtle text-info rounded-circle fs-4"
+                                    >
+                                        <i class="ri-ticket-2-line"></i>
+                                    </span>
+                                </div>
+                            </div>
+                        </div>
+                    </BCardBody>
+                </BCard>
+            </BCol>
+            <BCol xxl="3" sm="6">
+                <BCard no-body class="card-animate">
+                    <BCardBody>
+                        <div class="d-flex justify-content-between mx-3">
+                            <div>
+                                <p class="fw-medium text-muted mb-0">
+                                    Quotations Sent
+                                </p>
+                                <h2 class="mt-4 ff-secondary fw-semibold">
+                                    <count-to
+                                        :startVal="0"
+                                        :endVal="quotationsSent"
+                                    ></count-to>
+                                </h2>
+                            </div>
+                            <div>
+                                <div class="avatar-sm flex-shrink-0">
+                                    <span
+                                        class="avatar-title bg-warning-subtle text-warning rounded-circle fs-4"
+                                    >
+                                        <i class="mdi mdi-timer-sand"></i>
+                                    </span>
+                                </div>
+                            </div>
+                        </div>
+                    </BCardBody>
+                </BCard>
+            </BCol>
+            <BCol xxl="3" sm="6">
+                <BCard no-body class="card-animate">
+                    <BCardBody>
+                        <div class="d-flex justify-content-between mx-3">
+                            <div>
+                                <p class="fw-medium text-muted mb-0">
+                                    Closed Deals
+                                </p>
+                                <h2 class="mt-4 ff-secondary fw-semibold">
+                                    <count-to
+                                        :startVal="0"
+                                        :endVal="closedDeals"
+                                    ></count-to>
+                                </h2>
+                            </div>
+                            <div>
+                                <div class="avatar-sm flex-shrink-0">
+                                    <span
+                                        class="avatar-title bg-success-subtle text-success rounded-circle fs-4"
+                                    >
+                                        <i class="ri-checkbox-circle-line"></i>
+                                    </span>
+                                </div>
+                            </div>
+                        </div>
+                    </BCardBody>
+                </BCard>
+            </BCol>
+            <BCol xxl="3" sm="6">
+                <BCard no-body class="card-animate">
+                    <BCardBody>
+                        <div class="d-flex justify-content-between mx-3">
+                            <div>
+                                <p class="fw-medium text-muted mb-0">
+                                    Lost Deals
+                                </p>
+                                <h2 class="mt-4 ff-secondary fw-semibold">
+                                    <count-to
+                                        :startVal="0"
+                                        :endVal="lostDeals"
+                                    ></count-to>
+                                </h2>
+                            </div>
+                            <div>
+                                <div class="avatar-sm flex-shrink-0">
+                                    <span
+                                        class="avatar-title bg-success-subtle text-success rounded-circle fs-4"
+                                    >
+                                        <i class="ri-checkbox-circle-line"></i>
+                                    </span>
+                                </div>
+                            </div>
+                        </div>
+                    </BCardBody>
+                </BCard>
+            </BCol>
+        </BRow>
 
         <BRow>
             <BCol lg="12">
@@ -372,10 +508,15 @@ watch(searchQuery, () => {
                                         <td>{{ client.whatsapp }}</td>
                                         <td>{{ client.source_of_lead }}</td>
                                         <td>{{ client.project_cost }}</td>
-                                        <td>{{ client.follow_date }}</td>
                                         <td>{{ client.follow_up_status }}</td>
-
                                         <td class="d-flex gap-2">
+                                            <BButton
+                                                variant="primary px-3"
+                                                @click="quotationModal(client)"
+                                            >
+                                                Send Quotations
+                                            </BButton>
+
                                             <BButton
                                                 variant="success px-3"
                                                 @click="editModal(client)"
@@ -499,13 +640,10 @@ watch(searchQuery, () => {
                             placeholder="Phone"
                             v-model="form.phone"
                             :class="{
-                                'is-invalid':
-                                    submitted && !form.phone,
+                                'is-invalid': submitted && !form.phone,
                             }"
                         />
-                        <div class="invalid-feedback">
-                            Please enter Phone.
-                        </div>
+                        <div class="invalid-feedback">Please enter Phone.</div>
                     </BCol>
 
                     <!-- Email -->
@@ -520,18 +658,17 @@ watch(searchQuery, () => {
                                 'is-invalid': submitted && !form.email,
                             }"
                         />
-                        <div class="invalid-feedback">
-                            Please enter Email.
-                        </div>
+                        <div class="invalid-feedback">Please enter Email.</div>
                     </BCol>
 
                     <!-- whatsapp -->
                     <BCol lg="6">
                         <label class="form-label">Whatsapp</label>
                         <input
-                            type="date"
+                            type="text"
                             class="form-control"
                             v-model="form.whatsapp"
+                            placeholder="Enter whatsapp number"
                             :class="{
                                 'is-invalid': submitted && !form.whatsapp,
                             }"
@@ -548,8 +685,7 @@ watch(searchQuery, () => {
                             class="form-control"
                             v-model="form.source_of_lead"
                             :class="{
-                                'is-invalid':
-                                    submitted && !form.source_of_lead,
+                                'is-invalid': submitted && !form.source_of_lead,
                             }"
                         >
                             <option value="">Select source of lead</option>
@@ -575,104 +711,18 @@ watch(searchQuery, () => {
                             }"
                         >
                             <option value="">Select Status</option>
-                            <option value="company_formation">Company Formation</option>
+                            <option value="company_formation">
+                                Company Formation
+                            </option>
                             <option value="accounting">Accounting</option>
-                            <option value="visa_processing">Visa Processing</option>
+                            <option value="visa_processing">
+                                Visa Processing
+                            </option>
                         </select>
                         <div class="invalid-feedback">
                             Please select service type.
                         </div>
                     </BCol>
-
-                    <!-- follow up status -->
-                    <BCol lg="6">
-                        <label class="form-label">Follow Up Status</label>
-                        <select
-                            class="form-control"
-                            v-model="form.follow_up_status"
-                            :class="{
-                                'is-invalid': submitted && !form.follow_up_status,
-                            }"
-                        >
-                            <option value="">Select Status</option>
-                            <option value="pending">Pending</option>
-                            <option value="in_discussion">In Discussion</option>
-                            <option value="approved">Approved</option>
-                            <option value="lost">Lost</option>
-                        </select>
-                        <div class="invalid-feedback">
-                            Please select follow up status.
-                        </div>
-                    </BCol>
-
-                    <!-- client interaction -->
-                    <BCol lg="6">
-                        <label class="form-label">Client Interaction</label>
-                        <select
-                            class="form-control"
-                            v-model="form.client_interaction"
-                            :class="{
-                                'is-invalid': submitted && !form.client_interaction,
-                            }"
-                        >
-                            <option value="">Select client interaction</option>
-                            <option value="calls">Calls</option>
-                            <option value="emails">Emails</option>
-                            <option value="messages">Messages</option>
-                        </select>
-                        <div class="invalid-feedback">
-                            Please select client interaction.
-                        </div>
-                    </BCol>
-
-                    <!-- project cost -->
-                    <BCol lg="6">
-                        <label class="form-label">Project Cost</label>
-                        <input
-                            type="number"
-                            class="form-control"
-                            placeholder="project cost"
-                            v-model="form.project_cost"
-                            :class="{
-                                'is-invalid': submitted && !form.project_cost,
-                            }"
-                        />
-                        <div class="invalid-feedback">
-                            Please enter project cost.
-                        </div>
-                    </BCol>
-
-                    <!-- follow date -->
-                    <BCol lg="6">
-                        <label class="form-label">Follow Up Date</label>
-                        <input
-                            type="date"
-                            class="form-control"
-                            v-model="form.follow_date"
-                            :class="{
-                                'is-invalid': submitted && !form.follow_date,
-                            }"
-                        />
-                        <div class="invalid-feedback">
-                            Please select follow date.
-                        </div>
-                    </BCol>
-
-                     <!-- documents -->
-                    <BCol lg="12">
-                        <label class="form-label">Quotation Documents</label>
-                         <input
-                            type="file"
-                            id="documents"
-                            class="dropify"
-                            data-height="150"
-                            @change="handleDocuments($event)"
-                        />
-                        <div class="invalid-feedback">
-                            Please enter documents.
-                        </div>
-                    </BCol>
-
                 </BRow>
 
                 <div class="hstack gap-2 justify-content-end mt-3">
@@ -705,7 +755,7 @@ watch(searchQuery, () => {
             class="v-modal-custom"
             centered
             size="lg"
-            :title="'Add client'"
+            :title="'Edit client'"
         >
             <BFrom id="addform" class="tablelist-form" autocomplete="off">
                 <BRow class="g-3">
@@ -717,7 +767,9 @@ watch(searchQuery, () => {
                             class="form-control"
                             placeholder="client name"
                             v-model="editForm.name"
-                            :class="{ 'is-invalid': submitted && !editForm.name }"
+                            :class="{
+                                'is-invalid': submitted && !editForm.name,
+                            }"
                         />
                         <div class="invalid-feedback">
                             Please enter client name.
@@ -733,13 +785,10 @@ watch(searchQuery, () => {
                             placeholder="Phone"
                             v-model="editForm.phone"
                             :class="{
-                                'is-invalid':
-                                    submitted && !editForm.phone,
+                                'is-invalid': submitted && !editForm.phone,
                             }"
                         />
-                        <div class="invalid-feedback">
-                            Please enter Phone.
-                        </div>
+                        <div class="invalid-feedback">Please enter Phone.</div>
                     </BCol>
 
                     <!-- Email -->
@@ -754,9 +803,7 @@ watch(searchQuery, () => {
                                 'is-invalid': submitted && !editForm.email,
                             }"
                         />
-                        <div class="invalid-feedback">
-                            Please enter Email.
-                        </div>
+                        <div class="invalid-feedback">Please enter Email.</div>
                     </BCol>
 
                     <!-- whatsapp -->
@@ -766,6 +813,7 @@ watch(searchQuery, () => {
                             type="text"
                             class="form-control"
                             v-model="editForm.whatsapp"
+                            placeholder="Enter whatsapp number"
                             :class="{
                                 'is-invalid': submitted && !editForm.whatsapp,
                             }"
@@ -805,48 +853,69 @@ watch(searchQuery, () => {
                             class="form-control"
                             v-model="editForm.service_type"
                             :class="{
-                                'is-invalid': submitted && !editForm.service_type,
+                                'is-invalid':
+                                    submitted && !editForm.service_type,
                             }"
                         >
                             <option value="">Select Status</option>
-                            <option value="company_formation">Company Formation</option>
+                            <option value="company_formation">
+                                Company Formation
+                            </option>
                             <option value="accounting">Accounting</option>
-                            <option value="visa_processing">Visa Processing</option>
+                            <option value="visa_processing">
+                                Visa Processing
+                            </option>
                         </select>
                         <div class="invalid-feedback">
                             Please select service type.
                         </div>
                     </BCol>
+                </BRow>
 
-                    <!-- follow up status -->
-                    <BCol lg="6">
-                        <label class="form-label">Follow Up Status</label>
-                        <select
-                            class="form-control"
-                            v-model="editForm.follow_up_status"
-                            :class="{
-                                'is-invalid': submitted && !editForm.follow_up_status,
-                            }"
-                        >
-                            <option value="">Select Status</option>
-                            <option value="pending">Pending</option>
-                            <option value="in_discussion">In Discussion</option>
-                            <option value="approved">Approved</option>
-                            <option value="lost">Lost</option>
-                        </select>
-                        <div class="invalid-feedback">
-                            Please select follow up status.
-                        </div>
-                    </BCol>
+                <div class="hstack gap-2 justify-content-end mt-3">
+                    <BButton
+                        type="button"
+                        variant="light"
+                        @click="toggleEditModal = false"
+                    >
+                        Close
+                    </BButton>
 
+                    <BButton
+                        type="submit"
+                        variant="success"
+                        @click="handleUpdateSubmit"
+                    >
+                        Update client
+                    </BButton>
+                </div>
+            </BFrom>
+        </BModal>
+
+        <!-- send quotation modal -->
+        <BModal
+            v-model="toggleQuotationModal"
+            id="showmodal"
+            modal-class="zoomIn"
+            hide-footer
+            header-class="p-3 bg-info-subtle clientModal"
+            class="v-modal-custom"
+            centered
+            size="lg"
+            :title="'Send Quotation'"
+        >
+            <BFrom id="addform" class="tablelist-form" autocomplete="off">
+                <BRow class="g-3">
                     <!-- client interaction -->
                     <BCol lg="6">
                         <label class="form-label">Client Interaction</label>
                         <select
                             class="form-control"
-                            v-model="editForm.client_interaction"
+                            v-model="quatationForm.client_interaction_type"
                             :class="{
-                                'is-invalid': submitted && !editForm.client_interaction,
+                                'is-invalid':
+                                    submitted &&
+                                    !quatationForm.client_interaction_type,
                             }"
                         >
                             <option value="">Select client interaction</option>
@@ -866,9 +935,10 @@ watch(searchQuery, () => {
                             type="number"
                             class="form-control"
                             placeholder="project cost"
-                            v-model="editForm.project_cost"
+                            v-model="quatationForm.project_cost"
                             :class="{
-                                'is-invalid': submitted && !editForm.project_cost,
+                                'is-invalid':
+                                    submitted && !quatationForm.project_cost,
                             }"
                         />
                         <div class="invalid-feedback">
@@ -882,9 +952,10 @@ watch(searchQuery, () => {
                         <input
                             type="date"
                             class="form-control"
-                            v-model="editForm.follow_date"
+                            v-model="quatationForm.follow_up_date"
                             :class="{
-                                'is-invalid': submitted && !editForm.follow_date,
+                                'is-invalid':
+                                    submitted && !quatationForm.follow_up_date,
                             }"
                         />
                         <div class="invalid-feedback">
@@ -892,10 +963,49 @@ watch(searchQuery, () => {
                         </div>
                     </BCol>
 
-                     <!-- documents -->
+                    <!-- follow up status -->
+                    <BCol lg="6">
+                        <label class="form-label">Follow Up Status</label>
+                        <select
+                            class="form-control"
+                            v-model="quatationForm.follow_up_status"
+                            :class="{
+                                'is-invalid':
+                                    submitted &&
+                                    !quatationForm.follow_up_status,
+                            }"
+                        >
+                            <option value="">Select Status</option>
+                            <option value="pending">Pending</option>
+                            <option value="in_discussion">In Discussion</option>
+                            <option value="approved">Approved</option>
+                            <option value="lost">Lost</option>
+                        </select>
+                        <div class="invalid-feedback">
+                            Please select follow up status.
+                        </div>
+                    </BCol>
+
+                    <BCol lg="12">
+                        <label class="form-label">Notes (Optional)</label>
+                        <textarea
+                            name=""
+                            id=""
+                            v-model="quatationForm.notes"
+                            class="form-control"
+                            :class="{
+                                'is-invalid': submitted && !quatationForm.notes,
+                            }"
+                        ></textarea>
+                        <div class="invalid-feedback">
+                            Please select follow date.
+                        </div>
+                    </BCol>
+
+                    <!-- documents -->
                     <BCol lg="12">
                         <label class="form-label">Quotation Documents</label>
-                         <input
+                        <input
                             type="file"
                             id="documents"
                             class="imageFile"
@@ -906,14 +1016,13 @@ watch(searchQuery, () => {
                             Please enter documents.
                         </div>
                     </BCol>
-
                 </BRow>
 
                 <div class="hstack gap-2 justify-content-end mt-3">
                     <BButton
                         type="button"
                         variant="light"
-                        @click="toggleEditModal = false"
+                        @click="toggleQuotationModal = false"
                     >
                         Close
                     </BButton>
@@ -921,9 +1030,9 @@ watch(searchQuery, () => {
                     <BButton
                         type="submit"
                         variant="success"
-                        @click="handleUpdateSubmit"
+                        @click="handleQuotationSubmit"
                     >
-                        Update client
+                        Quotation Send
                     </BButton>
                 </div>
             </BFrom>
@@ -970,7 +1079,9 @@ watch(searchQuery, () => {
                     <!-- Source Of Lead -->
                     <BCol lg="6">
                         <label class="form-label">Source Of Lead</label>
-                        <p class="form-control">{{ editForm.source_of_lead }}</p>
+                        <p class="form-control">
+                            {{ editForm.source_of_lead }}
+                        </p>
                     </BCol>
 
                     <!-- service type -->
@@ -982,13 +1093,9 @@ watch(searchQuery, () => {
                     <!-- follow up status -->
                     <BCol lg="6">
                         <label class="form-label">Follow Up Status</label>
-                        <p class="form-control">{{ editForm.follow_up_status }}</p>
-                    </BCol>
-
-                    <!-- client interaction -->
-                    <BCol lg="6">
-                        <label class="form-label">Client Interaction</label>
-                        <p class="form-control">{{ editForm.client_interaction }}</p>
+                        <p class="form-control">
+                            {{ editForm.follow_up_status }}
+                        </p>
                     </BCol>
 
                     <!-- project cost -->
@@ -996,19 +1103,6 @@ watch(searchQuery, () => {
                         <label class="form-label">Project Cost</label>
                         <p class="form-control">{{ editForm.project_cost }}</p>
                     </BCol>
-
-                    <!-- follow date -->
-                    <BCol lg="6">
-                        <label class="form-label">Follow Up Date</label>
-                        <p class="form-control">{{ editForm.follow_date }}</p>
-                    </BCol>
-
-                     <!-- documents -->
-                    <BCol lg="12">
-                        <label class="form-label">Quotation Documents</label>
-                         <img :src="editForm.documents" alt="" style="width: 100%; height: auto; object-fit: contain;">
-                    </BCol>
-
                 </BRow>
             </BFrom>
         </BModal>

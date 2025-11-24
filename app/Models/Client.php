@@ -5,11 +5,11 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 
-class ClientProfile extends Model
+class Client extends Model
 {
-     use HasFactory;
+    use HasFactory;
 
-     protected $fillable = [
+    protected $fillable = [
         'name',
         'phone',
         'email',
@@ -17,12 +17,11 @@ class ClientProfile extends Model
         'source_of_lead',
         'service_type',
         'follow_up_status',
-        'client_interaction',
         'project_cost',
-        'documents',
-        'quotation_sent_status',
-        'follow_date',
     ];
 
-
+    public function clientInteractions()
+    {
+        return $this->hasOne(ClientInteraction::class);
+    }
 }
