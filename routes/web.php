@@ -4,6 +4,7 @@ use App\Http\Controllers\ClientProfileController;
 use App\Http\Controllers\CommercialAddressController;
 use App\Http\Controllers\CompanyController;
 use App\Http\Controllers\EmployeeController;
+use App\Http\Controllers\ExpenseController;
 use App\Http\Controllers\LeaveController;
 use App\Http\Controllers\TaskController;
 use App\Http\Controllers\VelzonRoutesController;
@@ -68,6 +69,10 @@ Route::middleware(['auth:sanctum', config('jetstream.auth_session'), 'verified']
         Route::post('/commercial/address/update/{id}', 'commercialAddressUpdate')->name('commercial.address.update');
         Route::delete('/commercial/address/destroy/{id}', 'commercialAddressDestroy')->name('commercial.address.destroy');
         Route::get('commercial/address/range', 'rangeReport')->name('commercial.address.range');
+    });
+
+    Route::controller(ExpenseController::class)->group(function () {
+        Route::get('/expense/list', 'expenseList')->name('expense.list');
     });
 
     Route::controller(VelzonRoutesController::class)->group(function () {

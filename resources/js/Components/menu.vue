@@ -218,6 +218,23 @@ onMounted(() => {
                     </Link>
                 </li>
 
+                <li class="nav-item">
+                    <a class="nav-link menu-link" href="#sidebarexpense" data-bs-toggle="collapse" role="button"
+                        aria-expanded="false" aria-controls="sidebarexpense">
+                        <i class="bx bx-money"></i>
+                        <span data-key="t-expense">Expense Management</span>
+                    </a>
+                    <div class="collapse menu-dropdown" id="sidebarexpense">
+                        <ul class="nav nav-sm flex-column">
+                            <li class="nav-item">
+                                <Link class="nav-link menu-link" href="/expense/list">
+                                <span data-key="t-expenses">Expenses List</span>
+                                </Link>
+                            </li>
+                        </ul>
+                    </div>
+                </li>
+
                 <!-- end Dashboard Menu -->
                 <li class="nav-item">
                     <a class="nav-link menu-link" href="#sidebarApps" data-bs-toggle="collapse" role="button"

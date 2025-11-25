@@ -24,7 +24,7 @@ class CompanyController extends Controller
             'license_type' => 'required|string|max:255',
             'expiry_date' => 'required|date',
             'services_provided' => 'required|string|max:255',
-            'renewal_status' => 'required|string|in:active,expiring_soon,expired,renewed',
+            'renewal_status' => 'required|string',
             'employee_name' => 'required|string|max:255',
             'passport_number' => 'required|string|max:255',
             'permit_expiry' => 'required|date',

@@ -31,7 +31,10 @@ const editForm = useForm({ ...baseForm.value });
 const tableHeaders = [
     { key: "id", label: "ID", sortable: true },
     { key: "name", label: "Name", sortable: true },
+    { key: "registration_number", label: "Registration Number", sortable: true },
     { key: "services_provided", label: "Services Provided", sortable: true },
+    { key: "license_type", label: "License Type", sortable: true },
+    { key: "expiry_date", label: "Expiry Date", sortable: true },
     { key: "renewal_status", label: "Renewal Status", sortable: true },
     { key: "actions", label: "Actions", sortable: false },
 ];
@@ -220,10 +223,7 @@ watch(searchQuery, () => {
                                 All Companies
                             </h5>
                             <div class="d-flex gap-2">
-                                <BButton
-                                    variant="danger"
-                                    @click="companyCreateModal"
-                                >
+                                <BButton variant="danger" @click="companyCreateModal">
                                     <i class="ri-add-line me-1"></i>
                                     Create Company
                                 </BButton>
@@ -232,21 +232,12 @@ watch(searchQuery, () => {
                     </BCardHeader>
 
                     <!-- SEARCH / ENTRIES -->
-                    <BCardBody
-                        class="border border-dashed border-end-0 border-start-0"
-                    >
+                    <BCardBody class="border border-dashed border-end-0 border-start-0">
                         <BForm>
                             <BRow class="g-3 justify-content-between">
-                                <BCol
-                                    xxl="2"
-                                    sm="12"
-                                    class="d-flex align-items-center gap-2"
-                                >
-                                    <select
-                                        v-model="perPage"
-                                        class="form-select shadow-none w-auto cursor-pointer"
-                                        style="background-color: #f3f6f9"
-                                    >
+                                <BCol xxl="2" sm="12" class="d-flex align-items-center gap-2">
+                                    <select v-model="perPage" class="form-select shadow-none w-auto cursor-pointer"
+                                        style="background-color: #f3f6f9">
                                         <option :value="5">5</option>
                                         <option :value="10">10</option>
                                         <option :value="20">20</option>
@@ -256,15 +247,9 @@ watch(searchQuery, () => {
 
                                 <BCol xxl="4" sm="12">
                                     <div class="search-box">
-                                        <input
-                                            v-model="searchQuery"
-                                            type="text"
-                                            class="form-control search bg-light border"
-                                            placeholder="Search..."
-                                        />
-                                        <i
-                                            class="ri-search-line search-icon"
-                                        ></i>
+                                        <input v-model="searchQuery" type="text"
+                                            class="form-control search bg-light border" placeholder="Search..." />
+                                        <i class="ri-search-line search-icon"></i>
                                     </div>
                                 </BCol>
                             </BRow>
@@ -278,66 +263,53 @@ watch(searchQuery, () => {
                                 <thead class="table-light text-muted">
                                     <tr>
                                         <th style="width: 46px">
-                                            <input
-                                                class="form-check-input"
-                                                type="checkbox"
-                                            />
+                                            <input class="form-check-input" type="checkbox" />
                                         </th>
-                                        <th
-                                            v-for="header in tableHeaders"
-                                            :key="header.key"
-                                            :data-sort="header.key"
+                                        <th v-for="header in tableHeaders" :key="header.key" :data-sort="header.key"
                                             :style="{
                                                 width: header.width || 'auto',
-                                            }"
-                                            class="sort"
-                                            @click="
+                                            }" class="sort" @click="
                                                 header.sortable
                                                     ? onSort(header.key)
                                                     : null
-                                            "
-                                        >
+                                                ">
                                             {{ header.label }}
                                         </th>
                                     </tr>
                                 </thead>
 
                                 <tbody>
-                                    <tr
-                                        v-for="(company, i) in resultQuery"
-                                        :key="i"
-                                    >
+                                    <tr v-for="(company, i) in resultQuery" :key="i">
                                         <td>
-                                            <input
-                                                class="form-check-input"
-                                                type="checkbox"
-                                            />
+                                            <input class="form-check-input" type="checkbox" />
                                         </td>
 
                                         <td>{{ company.id }}</td>
                                         <td>{{ company.name }}</td>
+                                        <td>{{ company.registration_number }}</td>
                                         <td>{{ company.services_provided }}</td>
+                                        <td>{{ company.license_type }}</td>
+                                        <td>
+                                        <td>
+                                            {{ new Date(company.expiry_date).toLocaleDateString('en-GB', {
+                                                day: '2-digit',
+                                                month: 'short',
+                                                year: 'numeric'
+                                            }) }}
+                                        </td>
+                                        </td>
                                         <td>{{ company.renewal_status }}</td>
 
                                         <td class="d-flex gap-2">
-                                            <BButton
-                                                variant="success px-3"
-                                                @click="editModal(company)"
-                                            >
+                                            <BButton variant="success px-3" @click="editModal(company)">
                                                 Edit
                                             </BButton>
 
-                                            <BButton
-                                                variant="danger px-3"
-                                                @click="deleteData(company)"
-                                            >
+                                            <BButton variant="danger px-3" @click="deleteData(company)">
                                                 Delete
                                             </BButton>
 
-                                            <BButton
-                                                variant="info px-3"
-                                                @click="viewModal(company)"
-                                            >
+                                            <BButton variant="info px-3" @click="viewModal(company)">
                                                 View
                                             </BButton>
                                         </td>
@@ -346,10 +318,7 @@ watch(searchQuery, () => {
                             </table>
 
                             <!-- No results -->
-                            <div
-                                v-if="resultQuery.length < 1"
-                                class="noresult text-center mt-5"
-                            >
+                            <div v-if="resultQuery.length < 1" class="noresult text-center mt-5">
                                 <h5 class="mt-2">No Results Found</h5>
                                 <p class="text-muted">
                                     Try changing your search term.
@@ -358,44 +327,21 @@ watch(searchQuery, () => {
                         </div>
 
                         <!-- PAGINATION -->
-                        <div
-                            class="d-flex justify-content-end"
-                            v-if="resultQuery.length >= 1"
-                        >
+                        <div class="d-flex justify-content-end" v-if="resultQuery.length >= 1">
                             <div class="pagination-wrap hstack gap-2">
-                                <BLink
-                                    class="page-item pagination-prev"
-                                    href="#"
-                                    :disabled="page <= 1"
-                                    @click="page--"
-                                >
+                                <BLink class="page-item pagination-prev" href="#" :disabled="page <= 1" @click="page--">
                                     Previous
                                 </BLink>
                                 <ul class="pagination listjs-pagination mb-0">
-                                    <li
-                                        :class="{
-                                            active: pageNumber == page,
-                                            disabled: pageNumber == '...',
-                                        }"
-                                        v-for="(pageNumber, index) in pages"
-                                        :key="index"
-                                        @click="page = pageNumber"
-                                    >
-                                        <BLink
-                                            class="page"
-                                            href="#"
-                                            data-i="1"
-                                            data-page="8"
-                                            >{{ pageNumber }}</BLink
-                                        >
+                                    <li :class="{
+                                        active: pageNumber == page,
+                                        disabled: pageNumber == '...',
+                                    }" v-for="(pageNumber, index) in pages" :key="index" @click="page = pageNumber">
+                                        <BLink class="page" href="#" data-i="1" data-page="8">{{ pageNumber }}</BLink>
                                     </li>
                                 </ul>
-                                <BLink
-                                    class="page-item pagination-next"
-                                    href="#"
-                                    :disabled="page >= pages.length"
-                                    @click="page++"
-                                >
+                                <BLink class="page-item pagination-next" href="#" :disabled="page >= pages.length"
+                                    @click="page++">
                                     Next
                                 </BLink>
                             </div>
@@ -406,29 +352,16 @@ watch(searchQuery, () => {
         </BRow>
 
         <!-- company create modal -->
-        <BModal
-            v-model="toggleCreateModal"
-            id="showmodal"
-            modal-class="zoomIn"
-            hide-footer
-            header-class="p-3 bg-info-subtle companyModal"
-            class="v-modal-custom"
-            centered
-            size="lg"
-            :title="'Add Company'"
-        >
+        <BModal v-model="toggleCreateModal" id="showmodal" modal-class="zoomIn" hide-footer
+            header-class="p-3 bg-info-subtle companyModal" class="v-modal-custom" centered size="lg"
+            :title="'Add Company'">
             <BFrom id="addform" class="tablelist-form" autocomplete="off">
                 <BRow class="g-3">
                     <!-- Company Name -->
                     <BCol lg="6">
                         <label class="form-label">Company Name</label>
-                        <input
-                            type="text"
-                            class="form-control"
-                            placeholder="Company Name"
-                            v-model="form.name"
-                            :class="{ 'is-invalid': submitted && !form.name }"
-                        />
+                        <input type="text" class="form-control" placeholder="Company Name" v-model="form.name"
+                            :class="{ 'is-invalid': submitted && !form.name }" />
                         <div class="invalid-feedback">
                             Please enter company name.
                         </div>
@@ -437,16 +370,11 @@ watch(searchQuery, () => {
                     <!-- Registration Number -->
                     <BCol lg="6">
                         <label class="form-label">Registration Number</label>
-                        <input
-                            type="text"
-                            class="form-control"
-                            placeholder="Registration Number"
-                            v-model="form.registration_number"
-                            :class="{
+                        <input type="text" class="form-control" placeholder="Registration Number"
+                            v-model="form.registration_number" :class="{
                                 'is-invalid':
                                     submitted && !form.registration_number,
-                            }"
-                        />
+                            }" />
                         <div class="invalid-feedback">
                             Please enter registration number.
                         </div>
@@ -455,15 +383,10 @@ watch(searchQuery, () => {
                     <!-- License Type -->
                     <BCol lg="6">
                         <label class="form-label">License Type</label>
-                        <input
-                            type="text"
-                            class="form-control"
-                            placeholder="License Type"
-                            v-model="form.license_type"
+                        <input type="text" class="form-control" placeholder="License Type" v-model="form.license_type"
                             :class="{
                                 'is-invalid': submitted && !form.license_type,
-                            }"
-                        />
+                            }" />
                         <div class="invalid-feedback">
                             Please enter license type.
                         </div>
@@ -472,14 +395,9 @@ watch(searchQuery, () => {
                     <!-- Expiry Date -->
                     <BCol lg="6">
                         <label class="form-label">Expiry Date</label>
-                        <input
-                            type="date"
-                            class="form-control"
-                            v-model="form.expiry_date"
-                            :class="{
-                                'is-invalid': submitted && !form.expiry_date,
-                            }"
-                        />
+                        <input type="date" class="form-control" v-model="form.expiry_date" :class="{
+                            'is-invalid': submitted && !form.expiry_date,
+                        }" />
                         <div class="invalid-feedback">
                             Please select expiry date.
                         </div>
@@ -488,14 +406,10 @@ watch(searchQuery, () => {
                     <!-- Services Provided -->
                     <BCol lg="6">
                         <label class="form-label">Services Provided</label>
-                        <select
-                            class="form-control"
-                            v-model="form.services_provided"
-                            :class="{
-                                'is-invalid':
-                                    submitted && !form.services_provided,
-                            }"
-                        >
+                        <select class="form-control" v-model="form.services_provided" :class="{
+                            'is-invalid':
+                                submitted && !form.services_provided,
+                        }">
                             <option value="">Select Service</option>
                             <option value="acounting">Acounting</option>
                             <option value="vat_filing">Vat Filing</option>
@@ -514,17 +428,14 @@ watch(searchQuery, () => {
                     <!-- Renewal Status -->
                     <BCol lg="6">
                         <label class="form-label">Renewal Status</label>
-                        <select
-                            class="form-control"
-                            v-model="form.renewal_status"
-                            :class="{
-                                'is-invalid': submitted && !form.renewal_status,
-                            }"
-                        >
+                        <select class="form-control" v-model="form.renewal_status" :class="{
+                            'is-invalid': submitted && !form.renewal_status,
+                        }">
                             <option value="">Select Status</option>
-                            <option value="pending">Pending</option>
-                            <option value="renewed">Renewed</option>
+                            <option value="active">Active</option>
+                            <option value="expiring_soon">Expiring Soon</option>
                             <option value="expired">Expired</option>
+                            <option value="renewe">Renewe</option>
                         </select>
                         <div class="invalid-feedback">
                             Please select renewal status.
@@ -534,15 +445,10 @@ watch(searchQuery, () => {
                     <!-- Employee Name -->
                     <BCol lg="6">
                         <label class="form-label">Employee Name</label>
-                        <input
-                            type="text"
-                            class="form-control"
-                            placeholder="Employee Name"
-                            v-model="form.employee_name"
+                        <input type="text" class="form-control" placeholder="Employee Name" v-model="form.employee_name"
                             :class="{
                                 'is-invalid': submitted && !form.employee_name,
-                            }"
-                        />
+                            }" />
                         <div class="invalid-feedback">
                             Please enter employee name.
                         </div>
@@ -551,16 +457,11 @@ watch(searchQuery, () => {
                     <!-- Passport Number -->
                     <BCol lg="6">
                         <label class="form-label">Passport Number</label>
-                        <input
-                            type="text"
-                            class="form-control"
-                            placeholder="Passport Number"
-                            v-model="form.passport_number"
-                            :class="{
+                        <input type="text" class="form-control" placeholder="Passport Number"
+                            v-model="form.passport_number" :class="{
                                 'is-invalid':
                                     submitted && !form.passport_number,
-                            }"
-                        />
+                            }" />
                         <div class="invalid-feedback">
                             Please enter passport number.
                         </div>
@@ -569,14 +470,9 @@ watch(searchQuery, () => {
                     <!-- Permit Expiry -->
                     <BCol lg="6">
                         <label class="form-label">Permit Expiry Date</label>
-                        <input
-                            type="date"
-                            class="form-control"
-                            v-model="form.permit_expiry"
-                            :class="{
-                                'is-invalid': submitted && !form.permit_expiry,
-                            }"
-                        />
+                        <input type="date" class="form-control" v-model="form.permit_expiry" :class="{
+                            'is-invalid': submitted && !form.permit_expiry,
+                        }" />
                         <div class="invalid-feedback">
                             Please select permit expiry.
                         </div>
@@ -585,13 +481,9 @@ watch(searchQuery, () => {
                     <!-- Permit Type -->
                     <BCol lg="6">
                         <label class="form-label">Permit Type</label>
-                        <select
-                            class="form-control"
-                            v-model="form.permit_type"
-                            :class="{
-                                'is-invalid': submitted && !form.permit_type,
-                            }"
-                        >
+                        <select class="form-control" v-model="form.permit_type" :class="{
+                            'is-invalid': submitted && !form.permit_type,
+                        }">
                             <option value="">Select Permit Type</option>
                             <option value="work_permit">Work Permit</option>
                             <option value="visitor_permit">
@@ -607,19 +499,11 @@ watch(searchQuery, () => {
                 </BRow>
 
                 <div class="hstack gap-2 justify-content-end mt-3">
-                    <BButton
-                        type="button"
-                        variant="light"
-                        @click="toggleCreateModal = false"
-                    >
+                    <BButton type="button" variant="light" @click="toggleCreateModal = false">
                         Close
                     </BButton>
 
-                    <BButton
-                        type="submit"
-                        variant="success"
-                        @click="handleSubmit"
-                    >
+                    <BButton type="submit" variant="success" @click="handleSubmit">
                         Add Company
                     </BButton>
                 </div>
@@ -627,31 +511,18 @@ watch(searchQuery, () => {
         </BModal>
 
         <!-- company edit modal -->
-        <BModal
-            v-model="toggleEditModal"
-            id="showmodal"
-            modal-class="zoomIn"
-            hide-footer
-            header-class="p-3 bg-info-subtle companyModal"
-            class="v-modal-custom"
-            centered
-            size="lg"
-            :title="'Add Company'"
-        >
+        <BModal v-model="toggleEditModal" id="showmodal" modal-class="zoomIn" hide-footer
+            header-class="p-3 bg-info-subtle companyModal" class="v-modal-custom" centered size="lg"
+            :title="'Add Company'">
             <BFrom id="addform" class="tablelist-form" autocomplete="off">
                 <BRow class="g-3">
                     <!-- Company Name -->
                     <BCol lg="6">
                         <label class="form-label">Company Name</label>
-                        <input
-                            type="text"
-                            class="form-control"
-                            placeholder="Company Name"
-                            v-model="editForm.name"
+                        <input type="text" class="form-control" placeholder="Company Name" v-model="editForm.name"
                             :class="{
                                 'is-invalid': submitted && !editForm.name,
-                            }"
-                        />
+                            }" />
                         <div class="invalid-feedback">
                             Please enter company name.
                         </div>
@@ -660,16 +531,11 @@ watch(searchQuery, () => {
                     <!-- Registration Number -->
                     <BCol lg="6">
                         <label class="form-label">Registration Number</label>
-                        <input
-                            type="text"
-                            class="form-control"
-                            placeholder="Registration Number"
-                            v-model="editForm.registration_number"
-                            :class="{
+                        <input type="text" class="form-control" placeholder="Registration Number"
+                            v-model="editForm.registration_number" :class="{
                                 'is-invalid':
                                     submitted && !editForm.registration_number,
-                            }"
-                        />
+                            }" />
                         <div class="invalid-feedback">
                             Please enter registration number.
                         </div>
@@ -678,16 +544,11 @@ watch(searchQuery, () => {
                     <!-- License Type -->
                     <BCol lg="6">
                         <label class="form-label">License Type</label>
-                        <input
-                            type="text"
-                            class="form-control"
-                            placeholder="License Type"
-                            v-model="editForm.license_type"
-                            :class="{
+                        <input type="text" class="form-control" placeholder="License Type"
+                            v-model="editForm.license_type" :class="{
                                 'is-invalid':
                                     submitted && !editForm.license_type,
-                            }"
-                        />
+                            }" />
                         <div class="invalid-feedback">
                             Please enter license type.
                         </div>
@@ -696,15 +557,10 @@ watch(searchQuery, () => {
                     <!-- Expiry Date -->
                     <BCol lg="6">
                         <label class="form-label">Expiry Date</label>
-                        <input
-                            type="date"
-                            class="form-control"
-                            v-model="editForm.expiry_date"
-                            :class="{
-                                'is-invalid':
-                                    submitted && !editForm.expiry_date,
-                            }"
-                        />
+                        <input type="date" class="form-control" v-model="editForm.expiry_date" :class="{
+                            'is-invalid':
+                                submitted && !editForm.expiry_date,
+                        }" />
                         <div class="invalid-feedback">
                             Please select expiry date.
                         </div>
@@ -713,14 +569,10 @@ watch(searchQuery, () => {
                     <!-- Services Provided -->
                     <BCol lg="6">
                         <label class="form-label">Services Provided</label>
-                        <select
-                            class="form-control"
-                            v-model="editForm.services_provided"
-                            :class="{
-                                'is-invalid':
-                                    submitted && !editForm.services_provided,
-                            }"
-                        >
+                        <select class="form-control" v-model="editForm.services_provided" :class="{
+                            'is-invalid':
+                                submitted && !editForm.services_provided,
+                        }">
                             <option value="">Select Service</option>
                             <option value="acounting">Acounting</option>
                             <option value="vat_filing">Vat Filing</option>
@@ -739,14 +591,10 @@ watch(searchQuery, () => {
                     <!-- Renewal Status -->
                     <BCol lg="6">
                         <label class="form-label">Renewal Status</label>
-                        <select
-                            class="form-control"
-                            v-model="editForm.renewal_status"
-                            :class="{
-                                'is-invalid':
-                                    submitted && !editForm.renewal_status,
-                            }"
-                        >
+                        <select class="form-control" v-model="editForm.renewal_status" :class="{
+                            'is-invalid':
+                                submitted && !editForm.renewal_status,
+                        }">
                             <option value="">Select Status</option>
                             <option value="pending">Pending</option>
                             <option value="renewed">Renewed</option>
@@ -760,16 +608,11 @@ watch(searchQuery, () => {
                     <!-- Employee Name -->
                     <BCol lg="6">
                         <label class="form-label">Employee Name</label>
-                        <input
-                            type="text"
-                            class="form-control"
-                            placeholder="Employee Name"
-                            v-model="editForm.employee_name"
-                            :class="{
+                        <input type="text" class="form-control" placeholder="Employee Name"
+                            v-model="editForm.employee_name" :class="{
                                 'is-invalid':
                                     submitted && !editForm.employee_name,
-                            }"
-                        />
+                            }" />
                         <div class="invalid-feedback">
                             Please enter employee name.
                         </div>
@@ -778,16 +621,11 @@ watch(searchQuery, () => {
                     <!-- Passport Number -->
                     <BCol lg="6">
                         <label class="form-label">Passport Number</label>
-                        <input
-                            type="text"
-                            class="form-control"
-                            placeholder="Passport Number"
-                            v-model="editForm.passport_number"
-                            :class="{
+                        <input type="text" class="form-control" placeholder="Passport Number"
+                            v-model="editForm.passport_number" :class="{
                                 'is-invalid':
                                     submitted && !editForm.passport_number,
-                            }"
-                        />
+                            }" />
                         <div class="invalid-feedback">
                             Please enter passport number.
                         </div>
@@ -796,15 +634,10 @@ watch(searchQuery, () => {
                     <!-- Permit Expiry -->
                     <BCol lg="6">
                         <label class="form-label">Permit Expiry Date</label>
-                        <input
-                            type="date"
-                            class="form-control"
-                            v-model="editForm.permit_expiry"
-                            :class="{
-                                'is-invalid':
-                                    submitted && !editForm.permit_expiry,
-                            }"
-                        />
+                        <input type="date" class="form-control" v-model="editForm.permit_expiry" :class="{
+                            'is-invalid':
+                                submitted && !editForm.permit_expiry,
+                        }" />
                         <div class="invalid-feedback">
                             Please select permit expiry.
                         </div>
@@ -813,14 +646,10 @@ watch(searchQuery, () => {
                     <!-- Permit Type -->
                     <BCol lg="6">
                         <label class="form-label">Permit Type</label>
-                        <select
-                            class="form-control"
-                            v-model="editForm.permit_type"
-                            :class="{
-                                'is-invalid':
-                                    submitted && !editForm.permit_type,
-                            }"
-                        >
+                        <select class="form-control" v-model="editForm.permit_type" :class="{
+                            'is-invalid':
+                                submitted && !editForm.permit_type,
+                        }">
                             <option value="">Select Permit Type</option>
                             <option value="work_permit">Work Permit</option>
                             <option value="visitor_permit">
@@ -836,19 +665,11 @@ watch(searchQuery, () => {
                 </BRow>
 
                 <div class="hstack gap-2 justify-content-end mt-3">
-                    <BButton
-                        type="button"
-                        variant="light"
-                        @click="toggleEditModal = false"
-                    >
+                    <BButton type="button" variant="light" @click="toggleEditModal = false">
                         Close
                     </BButton>
 
-                    <BButton
-                        type="submit"
-                        variant="success"
-                        @click="handleUpdateSubmit"
-                    >
+                    <BButton type="submit" variant="success" @click="handleUpdateSubmit">
                         Add Company
                     </BButton>
                 </div>
@@ -856,17 +677,9 @@ watch(searchQuery, () => {
         </BModal>
 
         <!-- company edit modal -->
-        <BModal
-            v-model="toggleViewModal"
-            id="showmodal"
-            modal-class="zoomIn"
-            hide-footer
-            header-class="p-3 bg-info-subtle companyModal"
-            class="v-modal-custom"
-            centered
-            size="lg"
-            :title="'View Company Information'"
-        >
+        <BModal v-model="toggleViewModal" id="showmodal" modal-class="zoomIn" hide-footer
+            header-class="p-3 bg-info-subtle companyModal" class="v-modal-custom" centered size="lg"
+            :title="'View Company Information'">
             <BFrom id="addform" class="tablelist-form" autocomplete="off">
                 <BRow class="g-3">
                     <!-- Company Name -->
