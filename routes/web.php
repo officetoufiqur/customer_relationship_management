@@ -65,6 +65,9 @@ Route::middleware(['auth:sanctum', config('jetstream.auth_session'), 'verified']
     Route::controller(CommercialAddressController::class)->group(function () {
         Route::get('/commercial/address', 'commercialAddress')->name('commercial.address');
         Route::post('/commercial/address/store', 'commercialAddressStore')->name('commercial.address.store');
+        Route::post('/commercial/address/update/{id}', 'commercialAddressUpdate')->name('commercial.address.update');
+        Route::delete('/commercial/address/destroy/{id}', 'commercialAddressDestroy')->name('commercial.address.destroy');
+        Route::get('commercial/address/range', 'rangeReport')->name('commercial.address.range');
     });
 
     Route::controller(VelzonRoutesController::class)->group(function () {

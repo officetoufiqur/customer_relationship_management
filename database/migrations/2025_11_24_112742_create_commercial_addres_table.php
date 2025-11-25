@@ -13,6 +13,7 @@ return new class extends Migration
     {
         Schema::create('commercial_addres', function (Blueprint $table) {
             $table->id();
+            $table->foreignId('client_id')->constrained('clients')->onDelete('cascade');
             $table->string('name');
             $table->enum('contact_type',['monthly', 'quarterly', 'yearly']);
             $table->date('start_date');

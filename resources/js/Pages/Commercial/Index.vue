@@ -6,16 +6,21 @@ import { Link, useForm } from "@inertiajs/vue3";
 import { CountTo } from "vue3-count-to";
 import Swal from "sweetalert2";
 import $ from "jquery";
+import { Inertia } from "@inertiajs/inertia";
+import { reactive } from "vue";
 
 const props = defineProps({
     address: Array,
     clients: Array,
+    yearlyReports: Number,
+    monthlyReports: Number,
+    quarterlyReports: Number
 });
 
 // ========== base form ==========
 const baseForm = ref({
     id: "",
-    name: "",
+    client_id: "",
     contact_type: "",
     start_date: "",
     end_date: "",
@@ -83,7 +88,7 @@ const addresCreateModal = () => {
 };
 
 const handleSubmit = async () => {
-    if (!form.name || !form.contact_type || !form.start_date || !form.end_date || !form.payment_status || !form.contact_value || !form.business_center_cost) {
+    if (!form.client_id || !form.contact_type || !form.start_date || !form.end_date || !form.payment_status || !form.contact_value || !form.business_center_cost) {
         Swal.fire(
             "Validation Error",
             "Please fill all required fields",
@@ -119,11 +124,12 @@ const editModal = (addres) => {
     editForm.payment_status = addres.payment_status;
     editForm.status = addres.status;
     editForm.contact_value = addres.contact_value;
+    editForm.business_center_cost = addres.business_center_cost;
     editForm.net_profit = addres.net_profit;
 };
 
 const handleUpdateSubmit = () => {
-    editForm.post(`/addres/update/${editForm.id}`, {
+    editForm.post(`/commercial/address/update/${editForm.id}`, {
         onSuccess: () => {
             Swal.fire("Updated!", "Commercial address updated successfully", "success");
             toggleEditModal.value = false;
@@ -143,7 +149,7 @@ const deleteData = (addres) => {
         cancelButtonText: "Cancel",
     }).then((result) => {
         if (result.isConfirmed) {
-            form.delete(`/addres/destroy/${addres.id}`, {
+            form.delete(`/commercial/address/destroy/${addres.id}`, {
                 onSuccess: () => {
                     Swal.fire(
                         "Deleted!",
@@ -206,11 +212,44 @@ const onSort = (key) => {
 watch(searchQuery, () => {
     page.value = 1;
 });
+
+
+// ============== RANGE monthly ==============
+const range = reactive({
+    start_month: '',
+    end_month: '',
+    total_profit: 0
+});
+
+const fetchRangeReport = async () => {
+    if (!range.start_month || !range.end_month) return;
+    try {
+        const response = await axios.get('/commercial/address/range', {
+            params: {
+                start_month: range.start_month,
+                end_month: range.end_month
+            }
+        });
+        range.total_profit = response.data.total_profit;
+    } catch (error) {
+        console.error('Error fetching range report:', error);
+    }
+};
+
+watch(
+    () => [range.start_month, range.end_month],
+    () => {
+        fetchRangeReport();
+    }
+);
+
+
+
 </script>
 
 <template>
     <Layout>
-        <PageHeader title="List View" pageTitle="address" />
+        <PageHeader title="List View" pageTitle="Commercial Address" />
 
         <BRow>
             <BCol xxl="3" sm="6">
@@ -219,21 +258,16 @@ watch(searchQuery, () => {
                         <div class="d-flex justify-content-between mx-3">
                             <div>
                                 <p class="fw-medium text-muted mb-0">
-                                    New Leads
+                                    Current Month Profit Reports
                                 </p>
                                 <h2 class="mt-4 ff-secondary fw-semibold">
-                                    <count-to
-                                        :startVal="0"
-                                        :endVal="newLeads"
-                                    ></count-to>
+                                    <count-to :startVal="0" :endVal="monthlyReports.total_profit"></count-to>
                                 </h2>
                             </div>
                             <div>
                                 <div class="avatar-sm flex-shrink-0">
-                                    <span
-                                        class="avatar-title bg-info-subtle text-info rounded-circle fs-4"
-                                    >
-                                        <i class="ri-ticket-2-line"></i>
+                                    <span class="avatar-title bg-info-subtle text-info rounded-circle fs-4">
+                                        <i class="bx bx-calendar-week"></i>
                                     </span>
                                 </div>
                             </div>
@@ -247,21 +281,16 @@ watch(searchQuery, () => {
                         <div class="d-flex justify-content-between mx-3">
                             <div>
                                 <p class="fw-medium text-muted mb-0">
-                                    Quotations Sent
+                                    Quarterly Profit Reports
                                 </p>
                                 <h2 class="mt-4 ff-secondary fw-semibold">
-                                    <count-to
-                                        :startVal="0"
-                                        :endVal="quotationsSent"
-                                    ></count-to>
+                                    <count-to :startVal="0" :endVal="quarterlyReports"></count-to>
                                 </h2>
                             </div>
                             <div>
                                 <div class="avatar-sm flex-shrink-0">
-                                    <span
-                                        class="avatar-title bg-warning-subtle text-warning rounded-circle fs-4"
-                                    >
-                                        <i class="mdi mdi-timer-sand"></i>
+                                    <span class="avatar-title bg-warning-subtle text-warning rounded-circle fs-4">
+                                        <i class="bx bxs-pie-chart-alt"></i>
                                     </span>
                                 </div>
                             </div>
@@ -275,21 +304,16 @@ watch(searchQuery, () => {
                         <div class="d-flex justify-content-between mx-3">
                             <div>
                                 <p class="fw-medium text-muted mb-0">
-                                    Closed Deals
+                                    Yearly Profit Reports
                                 </p>
                                 <h2 class="mt-4 ff-secondary fw-semibold">
-                                    <count-to
-                                        :startVal="0"
-                                        :endVal="closedDeals"
-                                    ></count-to>
+                                    <count-to :startVal="0" :endVal="yearlyReports"></count-to>
                                 </h2>
                             </div>
                             <div>
                                 <div class="avatar-sm flex-shrink-0">
-                                    <span
-                                        class="avatar-title bg-success-subtle text-success rounded-circle fs-4"
-                                    >
-                                        <i class="ri-checkbox-circle-line"></i>
+                                    <span class="avatar-title bg-success-subtle text-success rounded-circle fs-2">
+                                        <i class=" bx bxs-timer"></i>
                                     </span>
                                 </div>
                             </div>
@@ -300,31 +324,24 @@ watch(searchQuery, () => {
             <BCol xxl="3" sm="6">
                 <BCard no-body class="card-animate">
                     <BCardBody>
-                        <div class="d-flex justify-content-between mx-3">
+                        <div class="mx-3">
                             <div>
-                                <p class="fw-medium text-muted mb-0">
-                                    Lost Deals
-                                </p>
-                                <h2 class="mt-4 ff-secondary fw-semibold">
-                                    <count-to
-                                        :startVal="0"
-                                        :endVal="lostDeals"
-                                    ></count-to>
-                                </h2>
-                            </div>
-                            <div>
-                                <div class="avatar-sm flex-shrink-0">
-                                    <span
-                                        class="avatar-title bg-success-subtle text-success rounded-circle fs-4"
-                                    >
-                                        <i class="ri-checkbox-circle-line"></i>
-                                    </span>
+                                <span class="fw-medium text-muted">Monthly Filter</span>
+                                <div class="d-flex gap-2 mt-1">
+                                    <input type="month" v-model="range.start_month"
+                                        class="form-control form-control-sm" />
+                                    <input type="month" v-model="range.end_month"
+                                        class="form-control form-control-sm" />
                                 </div>
+                                <h2 class="mt-1 mb-0 ff-secondary fw-semibold">
+                                    <count-to :startVal="0" :endVal="range.total_profit"></count-to>
+                                </h2>
                             </div>
                         </div>
                     </BCardBody>
                 </BCard>
             </BCol>
+
         </BRow>
 
         <BRow>
@@ -337,10 +354,7 @@ watch(searchQuery, () => {
                                 All Companies
                             </h5>
                             <div class="d-flex gap-2">
-                                <BButton
-                                    variant="danger"
-                                    @click="addresCreateModal"
-                                >
+                                <BButton variant="danger" @click="addresCreateModal">
                                     <i class="ri-add-line me-1"></i>
                                     Create addres
                                 </BButton>
@@ -349,21 +363,12 @@ watch(searchQuery, () => {
                     </BCardHeader>
 
                     <!-- SEARCH / ENTRIES -->
-                    <BCardBody
-                        class="border border-dashed border-end-0 border-start-0"
-                    >
+                    <BCardBody class="border border-dashed border-end-0 border-start-0">
                         <BForm>
                             <BRow class="g-3 justify-content-between">
-                                <BCol
-                                    xxl="2"
-                                    sm="12"
-                                    class="d-flex align-items-center gap-2"
-                                >
-                                    <select
-                                        v-model="perPage"
-                                        class="form-select shadow-none w-auto cursor-pointer"
-                                        style="background-color: #f3f6f9"
-                                    >
+                                <BCol xxl="2" sm="12" class="d-flex align-items-center gap-2">
+                                    <select v-model="perPage" class="form-select shadow-none w-auto cursor-pointer"
+                                        style="background-color: #f3f6f9">
                                         <option :value="5">5</option>
                                         <option :value="10">10</option>
                                         <option :value="20">20</option>
@@ -373,15 +378,9 @@ watch(searchQuery, () => {
 
                                 <BCol xxl="4" sm="12">
                                     <div class="search-box">
-                                        <input
-                                            v-model="searchQuery"
-                                            type="text"
-                                            class="form-control search bg-light border"
-                                            placeholder="Search..."
-                                        />
-                                        <i
-                                            class="ri-search-line search-icon"
-                                        ></i>
+                                        <input v-model="searchQuery" type="text"
+                                            class="form-control search bg-light border" placeholder="Search..." />
+                                        <i class="ri-search-line search-icon"></i>
                                     </div>
                                 </BCol>
                             </BRow>
@@ -395,40 +394,25 @@ watch(searchQuery, () => {
                                 <thead class="table-light text-muted">
                                     <tr>
                                         <th style="width: 46px">
-                                            <input
-                                                class="form-check-input"
-                                                type="checkbox"
-                                            />
+                                            <input class="form-check-input" type="checkbox" />
                                         </th>
-                                        <th
-                                            v-for="header in tableHeaders"
-                                            :key="header.key"
-                                            :data-sort="header.key"
+                                        <th v-for="header in tableHeaders" :key="header.key" :data-sort="header.key"
                                             :style="{
                                                 width: header.width || 'auto',
-                                            }"
-                                            class="sort"
-                                            @click="
+                                            }" class="sort" @click="
                                                 header.sortable
                                                     ? onSort(header.key)
                                                     : null
-                                            "
-                                        >
+                                                ">
                                             {{ header.label }}
                                         </th>
                                     </tr>
                                 </thead>
 
                                 <tbody>
-                                    <tr
-                                        v-for="(addres, i) in resultQuery"
-                                        :key="i"
-                                    >
+                                    <tr v-for="(addres, i) in resultQuery" :key="i">
                                         <td>
-                                            <input
-                                                class="form-check-input"
-                                                type="checkbox"
-                                            />
+                                            <input class="form-check-input" type="checkbox" />
                                         </td>
 
                                         <td>{{ addres.id }}</td>
@@ -439,53 +423,30 @@ watch(searchQuery, () => {
                                             {{ addres.end_date }}
                                         </td>
                                         <td>
-                                            <span
-                                                class="badge bg-info"
-                                                v-if="addres.payment_status == 'paid'"
-                                                >Paid</span
-                                            >
-                                            <span v-else-if="addres.payment_status == 'unpaid'" class="badge bg-success">
+                                            <span class="badge bg-success"
+                                                v-if="addres.payment_status == 'paid'">Paid</span>
+                                            <span v-else-if="addres.payment_status == 'unpaid'"
+                                                class="badge bg-warning">
                                                 Unpaid
                                             </span>
-                                            <span
-                                                class="badge bg-danger"
-                                                v-else
-                                                >Unpaid</span
-                                            >
+                                            <span class="badge bg-danger" v-else>Overdue</span>
                                         </td>
                                         <td>
-                                            <span
-                                                class="badge bg-success"
-                                                v-if="addres.status == 1"
-                                                >Active</span
-                                            >
-                                            <span
-                                                class="badge bg-danger"
-                                                v-else
-                                                >Inactive</span
-                                            >
+                                            <span class="badge bg-success" v-if="addres.status == 1">Active</span>
+                                            <span class="badge bg-danger" v-else>Inactive</span>
                                         </td>
                                         <td>{{ addres.contact_value }}</td>
                                         <td>{{ addres.net_profit }}</td>
                                         <td class="d-flex gap-2">
-                                            <BButton
-                                                variant="success px-3"
-                                                @click="editModal(addres)"
-                                            >
+                                            <BButton variant="success px-3" @click="editModal(addres)">
                                                 Edit
                                             </BButton>
 
-                                            <BButton
-                                                variant="danger px-3"
-                                                @click="deleteData(addres)"
-                                            >
+                                            <BButton variant="danger px-3" @click="deleteData(addres)">
                                                 Delete
                                             </BButton>
 
-                                            <BButton
-                                                variant="info px-3"
-                                                @click="viewModal(addres)"
-                                            >
+                                            <BButton variant="info px-3" @click="viewModal(addres)">
                                                 View
                                             </BButton>
                                         </td>
@@ -494,10 +455,7 @@ watch(searchQuery, () => {
                             </table>
 
                             <!-- No results -->
-                            <div
-                                v-if="resultQuery.length < 1"
-                                class="noresult text-center mt-5"
-                            >
+                            <div v-if="resultQuery.length < 1" class="noresult text-center mt-5">
                                 <h5 class="mt-2">No Results Found</h5>
                                 <p class="text-muted">
                                     Try changing your search term.
@@ -506,44 +464,21 @@ watch(searchQuery, () => {
                         </div>
 
                         <!-- PAGINATION -->
-                        <div
-                            class="d-flex justify-content-end"
-                            v-if="resultQuery.length >= 1"
-                        >
+                        <div class="d-flex justify-content-end" v-if="resultQuery.length >= 1">
                             <div class="pagination-wrap hstack gap-2">
-                                <BLink
-                                    class="page-item pagination-prev"
-                                    href="#"
-                                    :disabled="page <= 1"
-                                    @click="page--"
-                                >
+                                <BLink class="page-item pagination-prev" href="#" :disabled="page <= 1" @click="page--">
                                     Previous
                                 </BLink>
                                 <ul class="pagination listjs-pagination mb-0">
-                                    <li
-                                        :class="{
-                                            active: pageNumber == page,
-                                            disabled: pageNumber == '...',
-                                        }"
-                                        v-for="(pageNumber, index) in pages"
-                                        :key="index"
-                                        @click="page = pageNumber"
-                                    >
-                                        <BLink
-                                            class="page"
-                                            href="#"
-                                            data-i="1"
-                                            data-page="8"
-                                            >{{ pageNumber }}</BLink
-                                        >
+                                    <li :class="{
+                                        active: pageNumber == page,
+                                        disabled: pageNumber == '...',
+                                    }" v-for="(pageNumber, index) in pages" :key="index" @click="page = pageNumber">
+                                        <BLink class="page" href="#" data-i="1" data-page="8">{{ pageNumber }}</BLink>
                                     </li>
                                 </ul>
-                                <BLink
-                                    class="page-item pagination-next"
-                                    href="#"
-                                    :disabled="page >= pages.length"
-                                    @click="page++"
-                                >
+                                <BLink class="page-item pagination-next" href="#" :disabled="page >= pages.length"
+                                    @click="page++">
                                     Next
                                 </BLink>
                             </div>
@@ -554,47 +489,32 @@ watch(searchQuery, () => {
         </BRow>
 
         <!-- addres create modal -->
-        <BModal
-            v-model="toggleCreateModal"
-            id="showmodal"
-            modal-class="zoomIn"
-            hide-footer
-            header-class="p-3 bg-info-subtle addresModal"
-            class="v-modal-custom"
-            centered
-            size="lg"
-            :title="'Add Address'"
-        >
+        <BModal v-model="toggleCreateModal" id="showmodal" modal-class="zoomIn" hide-footer
+            header-class="p-3 bg-info-subtle addresModal" class="v-modal-custom" centered size="lg"
+            :title="'Add Address'">
             <BFrom id="addform" class="tablelist-form" autocomplete="off">
                 <BRow class="g-3">
                     <!-- Client Name -->
                     <BCol lg="6">
                         <label class="form-label">Client Name</label>
-                        <select
-                            class="form-control"
-                            v-model="form.name"
-                            :class="{
-                                'is-invalid': submitted && !form.name,
-                            }"
-                        >
+                        <select class="form-control" v-model="form.client_id" :class="{
+                            'is-invalid': submitted && !form.client_id,
+                        }">
                             <option value="">Select Client Name</option>
-                            <option v-for="client in clients" :key="client.id" :value="client.name">{{ client.name }}</option>
+                            <option v-for="client in clients" :key="client.id" :value="client.id">{{ client.name }}
+                            </option>
                         </select>
                         <div class="invalid-feedback">
                             Please enter Client Name.
                         </div>
                     </BCol>
 
-                      <!-- Contact Type -->
+                    <!-- Contact Type -->
                     <BCol lg="6">
                         <label class="form-label">Contact Type</label>
-                        <select
-                            class="form-control"
-                            v-model="form.contact_type"
-                            :class="{
-                                'is-invalid': submitted && !form.contact_type,
-                            }"
-                        >
+                        <select class="form-control" v-model="form.contact_type" :class="{
+                            'is-invalid': submitted && !form.contact_type,
+                        }">
                             <option value="">Select Contact Type</option>
                             <option value="monthly">Monthly</option>
                             <option value="quarterly">Quarterly</option>
@@ -608,43 +528,28 @@ watch(searchQuery, () => {
                     <!-- Start Date -->
                     <BCol lg="6">
                         <label class="form-label">Start Date</label>
-                        <input
-                            type="date"
-                            class="form-control"
-                            placeholder="Start date"
-                            v-model="form.start_date"
+                        <input type="date" class="form-control" placeholder="Start date" v-model="form.start_date"
                             :class="{
                                 'is-invalid': submitted && !form.start_date,
-                            }"
-                        />
+                            }" />
                         <div class="invalid-feedback">Please enter start date.</div>
                     </BCol>
 
                     <!-- End Date -->
                     <BCol lg="6">
                         <label class="form-label">End Date</label>
-                        <input
-                            type="date"
-                            class="form-control"
-                            placeholder="End date"
-                            v-model="form.end_date"
-                            :class="{
-                                'is-invalid': submitted && !form.end_date,
-                            }"
-                        />
+                        <input type="date" class="form-control" placeholder="End date" v-model="form.end_date" :class="{
+                            'is-invalid': submitted && !form.end_date,
+                        }" />
                         <div class="invalid-feedback">Please enter end date.</div>
                     </BCol>
 
-                      <!-- Payment Status -->
+                    <!-- Payment Status -->
                     <BCol lg="6">
                         <label class="form-label">Payment Status</label>
-                        <select
-                            class="form-control"
-                            v-model="form.payment_status"
-                            :class="{
-                                'is-invalid': submitted && !form.payment_status,
-                            }"
-                        >
+                        <select class="form-control" v-model="form.payment_status" :class="{
+                            'is-invalid': submitted && !form.payment_status,
+                        }">
                             <option value="">Select Payment Status</option>
                             <option value="paid">Paid</option>
                             <option value="unpaid">Unpaid</option>
@@ -658,30 +563,20 @@ watch(searchQuery, () => {
                     <!-- contact_value -->
                     <BCol lg="6">
                         <label class="form-label">Contact Value</label>
-                        <input
-                            type="contact_value"
-                            class="form-control"
-                            placeholder="Contact value"
-                            v-model="form.contact_value"
-                            :class="{
+                        <input type="number" class="form-control" placeholder="Contact value"
+                            v-model="form.contact_value" :class="{
                                 'is-invalid': submitted && !form.contact_value,
-                            }"
-                        />
+                            }" />
                         <div class="invalid-feedback">Please enter contact value.</div>
                     </BCol>
 
                     <!-- business_center_cost -->
                     <BCol lg="6">
                         <label class="form-label">Business Center Cost</label>
-                        <input
-                            type="text"
-                            class="form-control"
-                            v-model="form.business_center_cost"
-                            placeholder="Enter business center cost"
-                            :class="{
+                        <input type="number" class="form-control" v-model="form.business_center_cost"
+                            placeholder="Enter business center cost" :class="{
                                 'is-invalid': submitted && !form.business_center_cost,
-                            }"
-                        />
+                            }" />
                         <div class="invalid-feedback">
                             Please select business center cost.
                         </div>
@@ -689,24 +584,210 @@ watch(searchQuery, () => {
                 </BRow>
 
                 <div class="hstack gap-2 justify-content-end mt-3">
-                    <BButton
-                        type="button"
-                        variant="light"
-                        @click="toggleCreateModal = false"
-                    >
+                    <BButton type="button" variant="light" @click="toggleCreateModal = false">
                         Close
                     </BButton>
 
-                    <BButton
-                        type="submit"
-                        variant="success"
-                        @click="handleSubmit"
-                    >
+                    <BButton type="submit" variant="success" @click="handleSubmit">
                         Add Address
                     </BButton>
                 </div>
             </BFrom>
         </BModal>
+
+        <!-- addres Edit modal -->
+        <BModal v-model="toggleEditModal" id="showmodal" modal-class="zoomIn" hide-footer
+            header-class="p-3 bg-info-subtle addresModal" class="v-modal-custom" centered size="lg"
+            :title="'Edit Commercial Address'">
+            <BFrom id="addform" class="tablelist-form" autocomplete="off">
+                <BRow class="g-3">
+                    <!-- Client Name -->
+                    <BCol lg="6">
+                        <label class="form-label">Client Name</label>
+                        <select class="form-control" v-model="editForm.name" :class="{
+                            'is-invalid': submitted && !editForm.name,
+                        }">
+                            <option value="">Select Client Name</option>
+                            <option v-for="client in clients" :key="client.id" :value="client.name">{{ client.name }}
+                            </option>
+                        </select>
+                        <div class="invalid-feedback">
+                            Please enter Client Name.
+                        </div>
+                    </BCol>
+
+                    <!-- Contact Type -->
+                    <BCol lg="6">
+                        <label class="form-label">Contact Type</label>
+                        <select class="form-control" v-model="editForm.contact_type" :class="{
+                            'is-invalid': submitted && !editForm.contact_type,
+                        }">
+                            <option value="">Select Contact Type</option>
+                            <option value="monthly">Monthly</option>
+                            <option value="quarterly">Quarterly</option>
+                            <option value="yearly">Yearly</option>
+                        </select>
+                        <div class="invalid-feedback">
+                            Please enter Contact Type.
+                        </div>
+                    </BCol>
+
+                    <!-- Start Date -->
+                    <BCol lg="6">
+                        <label class="form-label">Start Date</label>
+                        <input type="date" class="form-control" placeholder="Start date" v-model="editForm.start_date"
+                            :class="{
+                                'is-invalid': submitted && !editForm.start_date,
+                            }" />
+                        <div class="invalid-feedback">Please enter start date.</div>
+                    </BCol>
+
+                    <!-- End Date -->
+                    <BCol lg="6">
+                        <label class="form-label">End Date</label>
+                        <input type="date" class="form-control" placeholder="End date" v-model="editForm.end_date"
+                            :class="{
+                                'is-invalid': submitted && !editForm.end_date,
+                            }" />
+                        <div class="invalid-feedback">Please enter end date.</div>
+                    </BCol>
+
+                    <!-- Payment Status -->
+                    <BCol lg="6">
+                        <label class="form-label">Payment Status</label>
+                        <select class="form-control" v-model="editForm.payment_status" :class="{
+                            'is-invalid': submitted && !editForm.payment_status,
+                        }">
+                            <option value="">Select Payment Status</option>
+                            <option value="paid">Paid</option>
+                            <option value="unpaid">Unpaid</option>
+                            <option value="overdue">Overdue</option>
+                        </select>
+                        <div class="invalid-feedback">
+                            Please enter Payment Status.
+                        </div>
+                    </BCol>
+
+                    <!-- contact_value -->
+                    <BCol lg="6">
+                        <label class="form-label">Contact Value</label>
+                        <input type="contact_value" class="form-control" placeholder="Contact value"
+                            v-model="editForm.contact_value" :class="{
+                                'is-invalid': submitted && !editForm.contact_value,
+                            }" />
+                        <div class="invalid-feedback">Please enter contact value.</div>
+                    </BCol>
+
+                    <!-- business_center_cost -->
+                    <BCol lg="6">
+                        <label class="form-label">Business Center Cost</label>
+                        <input type="text" class="form-control" v-model="editForm.business_center_cost"
+                            placeholder="Enter business center cost" :class="{
+                                'is-invalid': submitted && !editForm.business_center_cost,
+                            }" />
+                        <div class="invalid-feedback">
+                            Please select business center cost.
+                        </div>
+                    </BCol>
+
+                    <!-- Status -->
+                    <BCol lg="6">
+                        <label class="form-label">Status</label>
+                        <select class="form-control" v-model="editForm.status" :class="{
+                            'is-invalid': submitted && !editForm.status,
+                        }">
+                            <option value="">Select Status</option>
+                            <option value="0">Inactive</option>
+                            <option value="1">Active</option>
+                        </select>
+                        <div class="invalid-feedback">
+                            Please enter Status.
+                        </div>
+                    </BCol>
+                </BRow>
+
+                <div class="hstack gap-2 justify-content-end mt-3">
+                    <BButton type="button" variant="light" @click="toggleEditModal = false">
+                        Close
+                    </BButton>
+
+                    <BButton type="submit" variant="success" @click="handleUpdateSubmit">
+                        Update Address
+                    </BButton>
+                </div>
+            </BFrom>
+        </BModal>
+
+        <!-- addres View modal -->
+        <BModal v-model="toggleViewModal" id="showmodal" modal-class="zoomIn" hide-footer
+            header-class="p-3 bg-info-subtle addresModal" class="v-modal-custom" centered size="lg"
+            :title="'View Commercial Address'">
+            <BFrom id="addform" class="tablelist-form" autocomplete="off">
+                <BRow class="g-3">
+                    <!-- Client Name -->
+                    <BCol lg="6">
+                        <label class="form-label">Client Name</label>
+                        <p class="form-control">{{ editForm.name }}</p>
+                    </BCol>
+
+                    <!-- Contact Type -->
+                    <BCol lg="6">
+                        <label class="form-label">Contact Type</label>
+                        <p class="form-control">{{ editForm.contact_type }}</p>
+                    </BCol>
+
+                    <!-- Start Date -->
+                    <BCol lg="6">
+                        <label class="form-label">Start Date</label>
+                        <p class="form-control">{{ editForm.start_date }}</p>
+                    </BCol>
+
+                    <!-- End Date -->
+                    <BCol lg="6">
+                        <label class="form-label">End Date</label>
+                        <p class="form-control">{{ editForm.end_date }}</p>
+                    </BCol>
+
+                    <!-- Payment Status -->
+                    <BCol lg="6">
+                        <label class="form-label">Payment Status</label>
+                        <p class="form-control">{{ editForm.payment_status }}</p>
+                    </BCol>
+
+                    <!-- contact_value -->
+                    <BCol lg="6">
+                        <label class="form-label">Contact Value</label>
+                        <p class="form-control">{{ editForm.contact_value }}</p>
+                    </BCol>
+
+                    <!-- business_center_cost -->
+                    <BCol lg="6">
+                        <label class="form-label">Business Center Cost</label>
+                        <p class="form-control">{{ editForm.business_center_cost }}</p>
+                    </BCol>
+
+                    <!-- Status -->
+                    <BCol lg="6">
+                        <label class="form-label">Status</label>
+                        <p v-if="editForm.status == 1" class="form-control">Active</p>
+                        <p v-else class="form-control">Inactive</p>
+                    </BCol>
+
+                    <!-- Net Profit -->
+                    <BCol lg="6">
+                        <label class="form-label">Net Profit</label>
+                        <p class="form-control">{{ editForm.net_profit }}</p>
+                    </BCol>
+                </BRow>
+
+                <div class="hstack gap-2 justify-content-end mt-3">
+                    <BButton type="button" variant="light" @click="toggleViewModal = false">
+                        Close
+                    </BButton>
+                </div>
+            </BFrom>
+        </BModal>
+
 
     </Layout>
 </template>
