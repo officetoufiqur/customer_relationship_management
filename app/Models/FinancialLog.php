@@ -5,21 +5,21 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 
-class Expense extends Model
+class FinancialLog extends Model
 {
-    use HasFactory;
+     use HasFactory;
 
     protected $fillable = [
+        'expense_id',
         'employee_id',
         'company_id',
-        'company_name',
         'amount',
-        'recipient_name',
-        'payment_method',
-        'client_paid',
-        'status',
-        'reason',
     ];
+
+    public function expense()
+    {
+        return $this->belongsTo(Expense::class);
+    }
 
     public function employee()
     {
@@ -30,10 +30,4 @@ class Expense extends Model
     {
         return $this->belongsTo(Company::class);
     }
-
-    public function financialLogs()
-    {
-        return $this->hasMany(FinancialLog::class);
-    }
-    
 }

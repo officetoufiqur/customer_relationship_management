@@ -231,6 +231,16 @@ onMounted(() => {
                                 <span data-key="t-expenses">Expenses List</span>
                                 </Link>
                             </li>
+                            <li class="nav-item">
+                                <Link class="nav-link menu-link" href="/expense/request">
+                                <span data-key="t-expenses">Expenses Request</span>
+                                </Link>
+                            </li>
+                            <li class="nav-item">
+                                <Link class="nav-link menu-link" href="/financial/logs">
+                                <span data-key="t-expenses">Financial Logs</span>
+                                </Link>
+                            </li>
                         </ul>
                     </div>
                 </li>

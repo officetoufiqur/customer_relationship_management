@@ -24,4 +24,9 @@ class Company extends Model
     {
         return $this->hasOne(EmployeePermit::class);
     }
+
+    public function financialLogs()
+    {
+        return $this->hasMany(FinancialLog::class);
+    }
 }

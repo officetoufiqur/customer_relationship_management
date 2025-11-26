@@ -73,6 +73,13 @@ Route::middleware(['auth:sanctum', config('jetstream.auth_session'), 'verified']
 
     Route::controller(ExpenseController::class)->group(function () {
         Route::get('/expense/list', 'expenseList')->name('expense.list');
+        Route::get('/expense/request', 'expenseRequest')->name('expense.request');
+        Route::post('/expense/status/update/{id}', 'expenseStatus')->name('expense.status');
+        Route::post('/expense/store', 'expenseStore')->name('expense.store');
+        Route::post('/expense/update/{id}', 'expenseUpdate')->name('expense.update');
+        Route::delete('/expense/destroy/{id}', 'expenseDestroy')->name('expense.destroy');
+        Route::get('/expense/reports/monthly', 'monthlyReport')->name('reports.monthly');
+        Route::get('/financial/logs', 'financiaLogs')->name('financial.logs');
     });
 
     Route::controller(VelzonRoutesController::class)->group(function () {

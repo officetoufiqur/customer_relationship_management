@@ -32,4 +32,9 @@ class Employee extends Model
     {
         return $this->belongsTo(User::class);
     }
+
+    public function financialLogs()
+    {
+        return $this->hasMany(FinancialLog::class);
+    }
 }
