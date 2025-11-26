@@ -5,6 +5,7 @@ use App\Http\Controllers\CommercialAddressController;
 use App\Http\Controllers\CompanyController;
 use App\Http\Controllers\EmployeeController;
 use App\Http\Controllers\ExpenseController;
+use App\Http\Controllers\InvoiceController;
 use App\Http\Controllers\LeaveController;
 use App\Http\Controllers\TaskController;
 use App\Http\Controllers\VelzonRoutesController;
@@ -81,6 +82,8 @@ Route::middleware(['auth:sanctum', config('jetstream.auth_session'), 'verified']
         Route::get('/expense/reports/monthly', 'monthlyReport')->name('reports.monthly');
         Route::get('/financial/logs', 'financiaLogs')->name('financial.logs');
     });
+
+    Route::get('/invoice/download/{id}', [InvoiceController::class, 'download'])->name('invoice.download');
 
     Route::controller(VelzonRoutesController::class)->group(function () {
 

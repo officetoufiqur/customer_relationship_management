@@ -7,9 +7,22 @@ import { CountTo } from "vue3-count-to";
 import Swal from "sweetalert2";
 import $ from "jquery";
 import { reactive } from "vue";
+import axios from "axios";
 
 const props = defineProps({
     logs: Array,
+});
+
+// ========== base form ==========
+const viewForm = useForm({
+    id: "",
+    company_id: "",
+    amount: "",
+    recipient_name: "",
+    payment_method: "",
+    client_paid: "",
+    reason: "",
+    status: "",
 });
 
 // ========== show all data ==========
@@ -19,6 +32,7 @@ const tableHeaders = [
     { key: "recipient_name", label: "Recipient Name", sortable: true },
     { key: "payment_method", label: "Payment Method", sortable: true },
     { key: "amount", label: "Amount", sortable: true },
+    { key: "actions", label: "Actions", sortable: false },
 ];
 
 const searchQuery = ref("");
@@ -49,6 +63,41 @@ const filteredData = computed(() => {
             : y.localeCompare(x);
     });
 });
+
+// ============== view ==============
+const toggleViewModal = ref(false);
+
+const viewModal = (log) => {
+    toggleViewModal.value = true;
+    viewForm.id = log.id;
+    viewForm.company_name = log.expense.company_name;
+    viewForm.recipient_name = log.expense.recipient_name;
+    viewForm.payment_method = log.expense.payment_method;
+    viewForm.amount = log.expense.amount;
+    viewForm.client_paid = log.expense.client_paid;
+    viewForm.reason = log.expense.reason;
+    viewForm.status = log.expense.status;
+    viewForm.created_at = log.created_at;
+};
+
+const downloadInvoice = () => {
+    axios({
+        url: `/invoice/download/${viewForm.id}`,
+        method: "GET",
+        responseType: "blob"
+    }).then((res) => {
+        const fileURL = window.URL.createObjectURL(new Blob([res.data]));
+        const fileLink = document.createElement("a");
+
+        fileLink.href = fileURL;
+        fileLink.setAttribute("download", `invoice_${viewForm.id}.pdf`);
+        document.body.appendChild(fileLink);
+
+        fileLink.click();
+        toggleViewModal.value = false;
+        Swal.fire("Download!", "Invoice downloaded successfully", "success");
+    });
+};
 
 // ============== PAGINATION ==============
 const sortKey = ref("id");
@@ -158,6 +207,11 @@ watch(searchQuery, () => {
                                         <td>{{ log.expense.recipient_name }}</td>
                                         <td>{{ log.expense.payment_method }}</td>
                                         <td>{{ log.expense.amount }}</td>
+                                        <td class="d-flex gap-2">
+                                            <BButton variant="info px-3" @click="viewModal(log)">
+                                                Generate Invoice
+                                            </BButton>
+                                        </td>
                                     </tr>
                                 </tbody>
                             </table>
@@ -195,5 +249,91 @@ watch(searchQuery, () => {
                 </BCard>
             </BCol>
         </BRow>
+
+        <!-- expense view modal -->
+        <BModal v-model="toggleViewModal" id="showmodal" modal-class="zoomIn" hide-footer
+            header-class="p-3 bg-info-subtle expenseModal" class="v-modal-custom" centered size="lg"
+            :title="'Financial Logs Invoice'">
+            <BFrom id="addform" class="tablelist-form" autocomplete="off">
+                <div class="invoice-box p-4 border rounded bg-white">
+                    <div class="row mb-4">
+                        <div class="col-sm-6">
+                            <h2>{{ viewForm.company_name }}</h2>
+                            <!-- <p>
+                                Employee ID: {{ viewForm.id }}<br>
+                                Company ID: {{ viewForm.company_id }}
+                            </p> -->
+                        </div>
+                        <div class="col-sm-6 text-end">
+                            <h4>Invoice</h4>
+                            <p>
+                                Invoice #:00{{ viewForm.id }}<br>
+                                Date: {{ new Date(viewForm.created_at).toLocaleDateString('en-GB', {
+                                    day: '2-digit',
+                                    month: 'short',
+                                    year: 'numeric'
+                                }) }}<br>
+                                Status: <span class="badge bg-success">{{ viewForm.status }}</span>
+                            </p>
+                        </div>
+                    </div>
+
+                    <div class="table-responsive">
+                        <table class="table table-bordered">
+                            <thead class="table-light">
+                                <tr>
+                                    <th>#</th>
+                                    <th>Expense Name / Reason</th>
+                                    <th>Recipient</th>
+                                    <th>Payment Method</th>
+                                    <th>Amount</th>
+                                    <th>Status</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr>
+                                    <td>{{ viewForm.id }}</td>
+                                    <td>{{ viewForm.reason }}</td>
+                                    <td>{{ viewForm.recipient_name }}</td>
+                                    <td>{{ viewForm.payment_method }}</td>
+                                    <td>${{ viewForm.amount }}</td>
+                                    <td>
+                                        <span class="badge"
+                                            :class="viewForm.status === 'approved' ? 'bg-success' : 'bg-warning'">
+                                            {{ viewForm.status }}
+                                        </span>
+                                    </td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+
+                    <div class="text-end mt-3">
+                        <h5>Total: ${{ viewForm.amount }}</h5>
+                    </div>
+
+                    <div class="text-center mt-4">
+                        <p>Thank you for your business!</p>
+                    </div>
+                </div>
+                <div class="hstack gap-2 justify-content-end mt-3">
+                    <BButton type="button" variant="light" @click="toggleViewModal = false">
+                        Close
+                    </BButton>
+
+                    <BButton type="submit" variant="success" @click="downloadInvoice">
+                        Download Invoice
+                    </BButton>
+                </div>
+            </BFrom>
+        </BModal>
     </Layout>
 </template>
+
+<style>
+.invoice-box {
+    max-width: 800px;
+    margin: auto;
+    background-color: #fff;
+}
+</style>
