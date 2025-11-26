@@ -7,6 +7,8 @@ use App\Http\Controllers\EmployeeController;
 use App\Http\Controllers\ExpenseController;
 use App\Http\Controllers\InvoiceController;
 use App\Http\Controllers\LeaveController;
+use App\Http\Controllers\PermissionController;
+use App\Http\Controllers\RoleController;
 use App\Http\Controllers\TaskController;
 use App\Http\Controllers\VelzonRoutesController;
 use Illuminate\Support\Facades\Route;
@@ -83,12 +85,34 @@ Route::middleware(['auth:sanctum', config('jetstream.auth_session'), 'verified']
         Route::get('/financial/logs', 'financiaLogs')->name('financial.logs');
     });
 
+     Route::controller(PermissionController::class)->group(function () {
+        Route::get('/permission', 'index')->name('permission');
+        Route::post('/permission/store', 'store')->name('permission.store');
+        Route::post('/permission/update/{id}', 'update')->name('permission.update');
+        Route::delete('/permission/destroy/{id}', 'destroy')->name('permission.destroy');
+    });
+
+     Route::controller(RoleController::class)->group(function () {
+        Route::get('/roles', 'index')->name('roles');
+        Route::post('/roles/store', 'store')->name('roles.store');
+        Route::post('/roles/update/{id}', 'update')->name('roles.update');
+        Route::delete('/roles/destroy/{id}', 'destroy')->name('roles.destroy');
+    });
+
     Route::get('/invoice/download/{id}', [InvoiceController::class, 'download'])->name('invoice.download');
 
     Route::controller(VelzonRoutesController::class)->group(function () {
 
         // dashboards
         Route::get('/', 'dashboard');
+
+         // icons route
+        Route::get("/icons/boxicons", "icons_boxicons");
+        Route::get("/icons/materialdesign", "icons_materialdesign");
+        Route::get("/icons/feather", "icons_feather");
+        Route::get("/icons/lineawesome", "icons_lineawesome");
+        Route::get("/icons/remix", "icons_remix");
+        Route::get("/icons/crypto", "icons_crypto");
 
         // apps project routes
         Route::get('/apps/projects-list', 'projects_list');

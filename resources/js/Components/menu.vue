@@ -244,6 +244,21 @@ onMounted(() => {
                         </ul>
                     </div>
                 </li>
+
+                <li class="nav-item">
+                    <Link class="nav-link menu-link" href="/roles">
+                    <i class="las la-users-cog"></i>
+                    <span data-key="t-clients">Roles</span>
+                    </Link>
+                </li>
+
+                <li class="nav-item">
+                    <Link class="nav-link menu-link" href="/permission">
+                    <i class="bx bx-shield-quarter"></i>
+                    <span data-key="t-clients">Permission</span>
+                    </Link>
+                </li>
+
             </ul>
         </template>
     </BContainer>

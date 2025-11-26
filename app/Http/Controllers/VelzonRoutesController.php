@@ -46,4 +46,28 @@ class VelzonRoutesController extends Controller
         return Inertia::render('dashboard/blog/index');
     }
 
+    public function icons_boxicons() {
+        return Inertia::render('icons/boxicons');
+    }
+
+    public function icons_materialdesign() {
+        return Inertia::render('icons/materialdesign');
+    }
+
+    public function icons_feather() {
+        return Inertia::render('icons/feather');
+    }
+
+    public function icons_lineawesome() {
+        return Inertia::render('icons/lineawesome');
+    }
+
+    public function icons_remix() {
+        return Inertia::render('icons/remix');
+    }
+
+    public function icons_crypto() {
+        return Inertia::render('icons/crypto');
+    }
+
 }
