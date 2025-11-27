@@ -1,68 +1,66 @@
-<script>
+<script setup>
+import { ref } from "vue";
 import getChartColorsArray from "@/common/getChartColorsArray";
 
-export default {
-  setup() {
-    return {
-      series: [{
-        name: "Revenue",
-        data: [20, 25, 30, 35, 40, 55, 70, 110, 150, 180, 210, 250],
-      },
-      {
-        name: "Expenses",
-        data: [12, 17, 45, 42, 24, 35, 42, 75, 102, 108, 156, 199],
-      },
-      ],
-      chartOptions: {
-        chart: {
-          height: 290,
-          type: "area",
-          toolbar: "false",
-        },
-        dataLabels: {
-          enabled: false,
-        },
-        stroke: {
-          curve: "smooth",
-          width: 2,
-        },
-        xaxis: {
-          categories: [
-            "Jan",
-            "Feb",
-            "Mar",
-            "Apr",
-            "May",
-            "Jun",
-            "Jul",
-            "Aug",
-            "Sep",
-            "Oct",
-            "Nov",
-            "Dec",
-          ],
-        },
-        yaxis: {
-          labels: {
-            formatter: function (value) {
-              return "$" + value + "k";
-            },
-          },
-          tickAmount: 5,
-          min: 0,
-          max: 260,
-        },
-        colors: getChartColorsArray('["--vz-success", "--vz-danger"]'),
-        fill: {
-          opacity: 0.06,
-          colors: ["#0AB39C", "#F06548"],
-          type: "solid",
-        },
-      },
-    };
+const series = ref([
+  {
+    name: "Revenue",
+    data: [20, 25, 30, 35, 40, 55, 70, 110, 150, 180, 210, 250],
   },
-};
+  {
+    name: "Expenses",
+    data: [12, 17, 45, 42, 24, 35, 42, 75, 102, 108, 156, 199],
+  },
+]);
+
+const chartOptions = ref({
+  chart: {
+    height: 290,
+    type: "area",
+    toolbar: "false",
+  },
+  dataLabels: {
+    enabled: false,
+  },
+  stroke: {
+    curve: "smooth",
+    width: 2,
+  },
+  xaxis: {
+    categories: [
+      "Jan",
+      "Feb",
+      "Mar",
+      "Apr",
+      "May",
+      "Jun",
+      "Jul",
+      "Aug",
+      "Sep",
+      "Oct",
+      "Nov",
+      "Dec",
+    ],
+  },
+  yaxis: {
+    labels: {
+      formatter(value) {
+        return "$" + value + "k";
+      },
+    },
+    tickAmount: 5,
+    min: 0,
+    max: 260,
+  },
+  colors: getChartColorsArray('["--vz-success", "--vz-danger"]'),
+  fill: {
+    opacity: 0.06,
+    colors: ["#0AB39C", "#F06548"],
+    type: "solid",
+  },
+});
 </script>
+
 
 <template>
   <BCard no-body class="card-height-100">

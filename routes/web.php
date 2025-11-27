@@ -3,6 +3,7 @@
 use App\Http\Controllers\ClientProfileController;
 use App\Http\Controllers\CommercialAddressController;
 use App\Http\Controllers\CompanyController;
+use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\EmployeeController;
 use App\Http\Controllers\ExpenseController;
 use App\Http\Controllers\InvoiceController;
@@ -32,6 +33,7 @@ Route::middleware(['auth:sanctum', config('jetstream.auth_session'), 'verified']
     //     Route::get('/employee/profile/{id}', 'employeeProfile')->name('employee.profile');
     //     Route::get('/profile/setting/{id}', 'pages_profile_setting')->name('profile.setting');
     // });
+    Route::get('/', [DashboardController::class, 'dashboard'])->name('dashboard');
 
     Route::controller(EmployeeController::class)->group(function () {
         Route::get('/employees/list', 'index')->name('employees.list');
@@ -93,14 +95,14 @@ Route::middleware(['auth:sanctum', config('jetstream.auth_session'), 'verified']
         Route::get('/financial/logs', 'financiaLogs')->name('financial.logs');
     });
 
-     Route::controller(PermissionController::class)->group(function () {
+    Route::controller(PermissionController::class)->group(function () {
         Route::get('/permission', 'index')->name('permission');
         Route::post('/permission/store', 'store')->name('permission.store');
         Route::post('/permission/update/{id}', 'update')->name('permission.update');
         Route::delete('/permission/destroy/{id}', 'destroy')->name('permission.destroy');
     });
 
-     Route::controller(RoleController::class)->group(function () {
+    Route::controller(RoleController::class)->group(function () {
         Route::get('/roles', 'index')->name('roles');
         Route::post('/roles/store', 'store')->name('roles.store');
         Route::post('/roles/update/{id}', 'update')->name('roles.update');
@@ -114,15 +116,15 @@ Route::middleware(['auth:sanctum', config('jetstream.auth_session'), 'verified']
     Route::controller(VelzonRoutesController::class)->group(function () {
 
         // dashboards
-        Route::get('/', 'dashboard');
+        // Route::get('/', 'dashboard');
 
-         // icons route
-        Route::get("/icons/boxicons", "icons_boxicons");
-        Route::get("/icons/materialdesign", "icons_materialdesign");
-        Route::get("/icons/feather", "icons_feather");
-        Route::get("/icons/lineawesome", "icons_lineawesome");
-        Route::get("/icons/remix", "icons_remix");
-        Route::get("/icons/crypto", "icons_crypto");
+        // icons route
+        Route::get('/icons/boxicons', 'icons_boxicons');
+        Route::get('/icons/materialdesign', 'icons_materialdesign');
+        Route::get('/icons/feather', 'icons_feather');
+        Route::get('/icons/lineawesome', 'icons_lineawesome');
+        Route::get('/icons/remix', 'icons_remix');
+        Route::get('/icons/crypto', 'icons_crypto');
 
         // apps project routes
         Route::get('/apps/projects-list', 'projects_list');
@@ -178,7 +180,6 @@ Route::middleware(['auth:sanctum', config('jetstream.auth_session'), 'verified']
         Route::get('/landing', 'landing');
         Route::get('/nft-landing', 'nft_landing');
         Route::get('/job-landing', 'job_landing');
-
 
         // auth sample page routes
         Route::get('/auth/signin-basic', 'auth_signin_basic');
