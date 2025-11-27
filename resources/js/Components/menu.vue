@@ -3,6 +3,7 @@ import { ref, computed, onMounted } from "vue";
 import { useStore } from "vuex";
 import { Link } from "@inertiajs/vue3";
 import simplebar from "simplebar-vue";
+import { can, hasRole } from "@/helpers/can";
 
 // Store
 const store = useStore();
@@ -161,6 +162,11 @@ onMounted(() => {
                     </a>
                     <div class="collapse menu-dropdown" id="sidebarEmployee">
                         <ul class="nav nav-sm flex-column">
+                            <!-- <li v-if="hasRole('admin')" class="nav-item">
+                                <Link href="/employees/list" class="nav-link" data-key="t-simple-page">
+                                Employee List
+                                </Link>
+                            </li> -->
                             <li class="nav-item">
                                 <Link href="/employees/list" class="nav-link" data-key="t-simple-page">
                                 Employee List

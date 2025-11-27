@@ -6,33 +6,43 @@ use App\Models\Employee;
 use App\Models\User;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
+use Spatie\Permission\Models\Role;
 
 class EmployeeController extends Controller
 {
     public function index()
-    {
-        $emplayee = User::with('employee')->get()->map(function ($user) {
-            return [
-                'id' => $user->id,
-                'name' => $user->name,
-                'email' => $user->email,
-                'id_number' => $user->employee->id_number ?? null,
-                'position' => $user->employee->position ?? null,
-                'department' => $user->employee->department ?? null,
-                'employ_status' => $user->employee->employ_status ?? null,
-                'salary' => $user->employee->salary ?? null,
-                'allowances' => $user->employee->allowances ?? null,
-                'deductions' => $user->employee->deductions ?? null,
-                'annual_leave_balance' => $user->employee->annual_leave_balance ?? null,
-                'sick_leave_balance' => $user->employee->sick_leave_balance ?? null,
-            ];
-        });
+{
+    $employees = User::with(['employee', 'roles'])->get()->map(function ($user) {
+        return [
+            'id' => $user->id,
+            'name' => $user->name,
+            'email' => $user->email,
+            'id_number' => $user->employee->id_number ?? null,
+            'position' => $user->employee->position ?? null,
+            'department' => $user->employee->department ?? null,
+            'employ_status' => $user->employee->employ_status ?? null,
+            'salary' => $user->employee->salary ?? null,
+            'allowances' => $user->employee->allowances ?? null,
+            'deductions' => $user->employee->deductions ?? null,
+            'annual_leave_balance' => $user->employee->annual_leave_balance ?? null,
+            'sick_leave_balance' => $user->employee->sick_leave_balance ?? null,
+            'roles' => $user->roles->map(function ($role) {
+                return [
+                    'id' => $role->id,
+                    'name' => $role->name
+                ];
+            }),
+        ];
+    });
 
-        // return $emplayee;
-        return Inertia::render('Employee/Index', [
-            'users' => $emplayee,
-        ]);
-    }
+    $roles = Role::select('id', 'name')->get();
+
+    return Inertia::render('Employee/Index', [
+        'users' => $employees,
+        'roles' => $roles
+    ]);
+}
+
 
     public function store(Request $request)
     {
@@ -53,6 +63,8 @@ class EmployeeController extends Controller
             'email' => $request->email,
             'password' => bcrypt($request->password),
         ]);
+
+        $user->syncRoles($request->roles);
 
         Employee::create([
             'user_id' => $user->id,
@@ -111,6 +123,8 @@ class EmployeeController extends Controller
                 'sick_leave_balance' => $request->sick_leave_balance ?? 0,
             ]);
         }
+
+        $user->roles()->sync($request->roles);
 
         return redirect()->back()->with('success', 'Employee updated successfully.');
     }

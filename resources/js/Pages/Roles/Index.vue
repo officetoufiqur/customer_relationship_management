@@ -10,12 +10,14 @@ import { reactive } from "vue";
 
 const props = defineProps({
     roles: Array,
+    permissions: Array,
 });
 
 // ========== base form ==========
 const baseForm = ref({
     id: "",
     name: "",
+    permissions: []
 });
 
 const form = useForm({ ...baseForm.value });
@@ -25,6 +27,7 @@ const editForm = useForm({ ...baseForm.value });
 const tableHeaders = [
     { key: "id", label: "ID", sortable: true },
     { key: "name", label: "Name", sortable: true },
+    { key: "permissions", label: "Permissions", sortable: true },
     { key: "actions", label: "Actions", sortable: false },
 ];
 
@@ -38,7 +41,8 @@ const filteredData = computed(() => {
 
         data = data.filter((c) => {
             return (
-                String(c.name ?? "").toLowerCase().includes(s)
+                String(c.name ?? "").toLowerCase().includes(s) ||
+                String(c.permissions ?? "").toLowerCase().includes(s)
             );
         });
     }
@@ -71,9 +75,9 @@ const handleSubmit = async () => {
         return;
     }
 
-    form.post("/role/store", {
+    form.post("/roles/store", {
         onSuccess: () => {
-            Swal.fire("Created!", "role added successfully", "success");
+            Swal.fire("Created!", "Role added successfully", "success");
             toggleCreateModal.value = false;
             form.reset();
         },
@@ -92,10 +96,11 @@ const editModal = (role) => {
 
     editForm.id = role.id;
     editForm.name = role.name;
+    editForm.permissions = role.permissions.map((p) => p.id);
 };
 
 const handleUpdateSubmit = () => {
-    editForm.post(`/role/update/${editForm.id}`, {
+    editForm.post(`/roles/update/${editForm.id}`, {
         onSuccess: () => {
             Swal.fire("Updated!", "role updated successfully", "success");
             toggleEditModal.value = false;
@@ -115,7 +120,7 @@ const deleteData = (role) => {
         cancelButtonText: "Cancel",
     }).then((result) => {
         if (result.isConfirmed) {
-            form.delete(`/role/destroy/${role.id}`, {
+            form.delete(`/roles/destroy/${role.id}`, {
                 onSuccess: () => {
                     Swal.fire(
                         "Deleted!",
@@ -219,7 +224,7 @@ watch(searchQuery, () => {
                             <table class="table align-middle table-nowrap mb-0">
                                 <thead class="table-light text-muted">
                                     <tr>
-                                        <th style="width: 2px">
+                                        <th style="width: 46px">
                                             <input class="form-check-input" type="checkbox" />
                                         </th>
                                         <th v-for="header in tableHeaders" :key="header.key" :data-sort="header.key"
@@ -243,6 +248,12 @@ watch(searchQuery, () => {
 
                                         <td>{{ role.id }}</td>
                                         <td>{{ role.name }}</td>
+                                        <td>
+                                            <span v-for="permission in role.permissions" :key="permission.id"
+                                                class="badge bg-success-subtle text-success me-3">
+                                                {{ permission.name }}
+                                            </span>
+                                        </td>
                                         <td class="d-flex gap-2">
                                             <BButton variant="success px-3" @click="editModal(role)">
                                                 Edit
@@ -291,21 +302,40 @@ watch(searchQuery, () => {
 
         <!-- role create modal -->
         <BModal v-model="toggleCreateModal" id="showmodal" modal-class="zoomIn" hide-footer
-            header-class="p-3 bg-info-subtle roleModal" class="v-modal-custom" centered size="lg"
-            :title="'Add role'">
+            header-class="p-3 bg-info-subtle roleModal" class="v-modal-custom" centered size="lg" :title="'Add Role'">
             <BFrom id="addform" class="tablelist-form" autocomplete="off">
                 <BRow class="g-3">
                     <!-- name -->
                     <BCol lg="12">
                         <label class="form-label">Name</label>
-                        <input type="text" class="form-control" placeholder="Enter name" v-model="form.name"
-                            :class="{
-                                'is-invalid': submitted && !form.name,
-                            }" />
+                        <input type="text" class="form-control" placeholder="Enter name" v-model="form.name" :class="{
+                            'is-invalid': submitted && !form.name,
+                        }" />
                         <div class="invalid-feedback">
                             Please enter name.
                         </div>
                     </BCol>
+
+                    <!-- permission -->
+                    <BCol lg="12">
+                        <label class="form-label block mb-2 font-semibold text-gray-700">
+                            Permission
+                        </label>
+
+                        <div class="row g-2">
+                            <label class="col-md-4 d-flex align-items-center gap-2"
+                                v-for="permission in props.permissions" :key="permission.id">
+                                <input type="checkbox" :value="permission.id" v-model="form.permissions"
+                                    class="form-check-input cursor-pointer" />
+                                <span class="text-gray-700 cursor-pointer">{{ permission.name }}</span>
+                            </label>
+                        </div>
+
+                        <div class="invalid-feedback text-red-500 mt-1">
+                            Please enter permission.
+                        </div>
+                    </BCol>
+
                 </BRow>
 
                 <div class="hstack gap-2 justify-content-end mt-3">
@@ -314,7 +344,7 @@ watch(searchQuery, () => {
                     </BButton>
 
                     <BButton type="submit" variant="success" @click="handleSubmit">
-                        role Create
+                        Role Create
                     </BButton>
                 </div>
             </BFrom>
@@ -322,19 +352,37 @@ watch(searchQuery, () => {
 
         <!-- role edit modal -->
         <BModal v-model="toggleEditModal" id="showmodal" modal-class="zoomIn" hide-footer
-            header-class="p-3 bg-info-subtle roleModal" class="v-modal-custom" centered size="lg"
-            :title="'Edit role'">
+            header-class="p-3 bg-info-subtle roleModal" class="v-modal-custom" centered size="lg" :title="'Edit Role'">
             <BFrom id="addform" class="tablelist-form" autocomplete="off">
                 <BRow class="g-3">
                     <!-- name -->
                     <BCol lg="12">
                         <label class="form-label">Name</label>
-                        <input type="text" class="form-control" placeholder="Enter name" v-model="editForm.name"
-                            :class="{
-                                'is-invalid': submitted && !editForm.name,
-                            }" />
+                        <input type="text" class="form-control" placeholder="Enter name" v-model="editForm.name" :class="{
+                            'is-invalid': submitted && !editForm.name,
+                        }" />
                         <div class="invalid-feedback">
                             Please enter name.
+                        </div>
+                    </BCol>
+
+                    <!-- permission -->
+                    <BCol lg="12">
+                        <label class="form-label block mb-2 font-semibold text-gray-700">
+                            Permission
+                        </label>
+
+                        <div class="row g-2">
+                            <label class="col-md-4 d-flex align-items-center gap-2"
+                                v-for="permission in props.permissions" :key="permission.id">
+                                <input type="checkbox" :value="permission.id" v-model="editForm.permissions"
+                                    class="form-check-input cursor-pointer" />
+                                <span class="text-gray-700 cursor-pointer">{{ permission.name }}</span>
+                            </label>
+                        </div>
+
+                        <div class="invalid-feedback text-red-500 mt-1">
+                            Please enter permission.
                         </div>
                     </BCol>
                 </BRow>
@@ -345,7 +393,7 @@ watch(searchQuery, () => {
                     </BButton>
 
                     <BButton type="submit" variant="success" @click="handleUpdateSubmit">
-                        Update role
+                        Update Role
                     </BButton>
                 </div>
             </BFrom>

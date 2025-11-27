@@ -32,7 +32,10 @@ class LeaveController extends Controller
             'medical_excuse_file' => 'nullable|file|mimes:jpg,jpeg,png,pdf|max:2048',
         ]);
 
-        $filePath = FileUpload::storeFile($request->file('medical_excuse_file'), 'uploads/leave');
+        $filePath = null;
+        if($request->hasFile('medical_excuse_file')) {
+            $filePath = FileUpload::storeFile($request->file('medical_excuse_file'), 'uploads/leave');
+        }
 
         $employee = Auth::user();
 

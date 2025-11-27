@@ -25,6 +25,14 @@ use Illuminate\Support\Facades\Route;
 */
 
 Route::middleware(['auth:sanctum', config('jetstream.auth_session'), 'verified'])->group(function () {
+    // Route::controller(EmployeeController::class)->group(function () {
+    //     Route::get('/employees/list', 'index')->name('employees.list')->middleware('permission:view_users');
+    //     Route::post('/employees/store', 'store')->name('employees.store')->middleware('permission:create_users');
+    //     Route::put('/employees/update/{id}', 'update')->name('employees.update')->middleware('permission:update_users');
+    //     Route::get('/employee/profile/{id}', 'employeeProfile')->name('employee.profile');
+    //     Route::get('/profile/setting/{id}', 'pages_profile_setting')->name('profile.setting');
+    // });
+
     Route::controller(EmployeeController::class)->group(function () {
         Route::get('/employees/list', 'index')->name('employees.list');
         Route::post('/employees/store', 'store')->name('employees.store');
@@ -100,7 +108,9 @@ Route::middleware(['auth:sanctum', config('jetstream.auth_session'), 'verified']
     });
 
     Route::get('/invoice/download/{id}', [InvoiceController::class, 'download'])->name('invoice.download');
+});
 
+Route::middleware(['auth:sanctum', config('jetstream.auth_session'), 'verified'])->group(function () {
     Route::controller(VelzonRoutesController::class)->group(function () {
 
         // dashboards

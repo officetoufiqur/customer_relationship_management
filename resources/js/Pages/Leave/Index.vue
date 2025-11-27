@@ -261,18 +261,17 @@ onMounted(() => {
                         class="border border-dashed border-end-0 border-start-0"
                     >
                         <BForm>
-                            <BRow class="g-3">
-                                <BCol xxl="2" sm="6">
-                                    <select
-                                        v-model="perPage"
-                                        class="form-select shadow-none"
-                                    >
-                                        <option :value="5">5 per page</option>
-                                        <option :value="10">10 per page</option>
-                                        <option :value="20">20 per page</option>
+                            <BRow class="g-3 justify-content-between">
+                                <BCol xxl="2" sm="12" class="d-flex align-items-center gap-2">
+                                    <select v-model="perPage" class="form-select shadow-none w-auto cursor-pointer"
+                                        style="background-color: #f3f6f9">
+                                        <option :value="5">5</option>
+                                        <option :value="10">10</option>
+                                        <option :value="20">20</option>
                                     </select>
+                                    <span>Entries per page</span>
                                 </BCol>
-                                <BCol xxl="5" sm="12">
+                                <BCol xxl="4" sm="12">
                                     <div class="search-box">
                                         <input
                                             type="text"
