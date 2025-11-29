@@ -15,6 +15,7 @@ const props = defineProps({
      empolyes: Number,
      companys: Number,
      address: Number,
+     monthly: Array,
 });
 
 //============== count ==============
@@ -50,6 +51,7 @@ const crmWidgets = ref([
     prefix: "",
   }
 ]);
+
 
 </script>
 
@@ -96,7 +98,7 @@ const crmWidgets = ref([
         <DealType />
       </BCol>
       <BCol xxl="6">
-        <BalanceOverview />
+        <BalanceOverview :monthlyData="monthly" />
       </BCol>
     </BRow>
     <BRow>
