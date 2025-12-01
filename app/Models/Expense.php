@@ -10,30 +10,23 @@ class Expense extends Model
     use HasFactory;
 
     protected $fillable = [
-        'employee_id',
-        'company_id',
-        'company_name',
+        'balance_id',
+        'created_by',
+        'title',
+        'description',
         'amount',
-        'recipient_name',
-        'payment_method',
-        'client_paid',
-        'status',
-        'reason',
+        'is_approved',
+        'attachment',
     ];
 
-    public function employee()
+    public function balance()
     {
-        return $this->belongsTo(Employee::class);
+        return $this->belongsTo(Balance::class);
     }
 
-    public function company()
+    public function createdBy()
     {
-        return $this->belongsTo(Company::class);
-    }
-
-    public function financialLogs()
-    {
-        return $this->hasMany(FinancialLog::class);
+        return $this->belongsTo(User::class);
     }
     
 }

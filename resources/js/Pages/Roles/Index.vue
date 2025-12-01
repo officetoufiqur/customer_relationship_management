@@ -7,6 +7,7 @@ import { CountTo } from "vue3-count-to";
 import Swal from "sweetalert2";
 import $ from "jquery";
 import { reactive } from "vue";
+import { can } from "@/helpers/can";
 
 const props = defineProps({
     roles: Array,
@@ -185,7 +186,7 @@ watch(searchQuery, () => {
                                 All Roles
                             </h5>
                             <div class="d-flex gap-2">
-                                <BButton variant="danger" @click="roleCreateModal">
+                                <BButton v-if="can('create_roles')" variant="danger" @click="roleCreateModal">
                                     <i class="ri-add-line me-1"></i>
                                     Create Roles
                                 </BButton>
@@ -249,16 +250,20 @@ watch(searchQuery, () => {
                                         <td>{{ role.id }}</td>
                                         <td>{{ role.name }}</td>
                                         <td>
-                                            <span v-for="permission in role.permissions" :key="permission.id"
-                                                class="badge bg-success-subtle text-success me-3">
+                                            <span v-for="(permission, index) in role.permissions.slice(0, 5)"
+                                                :key="permission.id" class="badge bg-success-subtle text-success me-2">
                                                 {{ permission.name }}
+                                            </span>
+                                            <span v-if="role.permissions.length > 5"
+                                                class="badge bg-primary-subtle text-primary">
+                                                +{{ role.permissions.length - 5 }} more
                                             </span>
                                         </td>
                                         <td class="d-flex gap-2">
-                                            <BButton variant="success px-3" @click="editModal(role)">
+                                            <BButton v-if="can('update_roles')" variant="success px-3" @click="editModal(role)">
                                                 Edit
                                             </BButton>
-                                            <BButton variant="danger px-3" @click="deleteData(role)">
+                                            <BButton v-if="can('delete_roles')" variant="danger px-3" @click="deleteData(role)">
                                                 Delete
                                             </BButton>
                                         </td>

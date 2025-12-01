@@ -13,6 +13,7 @@ import animationData from "@/Components/widgets/msoeawqm.json";
 import animationData1 from "@/Components/widgets/gsqxdxog.json";
 import Lottie from "@/Components/widgets/lottie.vue";
 import simplebar from "simplebar-vue";
+import { can } from "@/helpers/can";
 
 const props = defineProps({
     users: Array,
@@ -345,7 +346,7 @@ const paginate = (tasks) => {
                                     >
                                         <i class="ri-delete-bin-2-line"></i>
                                     </BButton>
-                                    <BButton
+                                    <BButton v-if="can('task_create')"
                                         variant="danger"
                                         class="add-btn"
                                         @click="toggleModal"
@@ -587,14 +588,14 @@ const paginate = (tasks) => {
                                             >
                                         </td>
                                         <td class="d-flex gap-2">
-                                            <BButton
+                                            <BButton v-if="can('task_edit')"
                                                 variant="success px-3"
                                                 class="add-btn"
                                                 @click="editDetails(task)"
                                             >
                                                 Edit
                                             </BButton>
-                                            <BButton
+                                            <BButton v-if="can('task_delete')"
                                                 variant="danger px-3"
                                                 class="add-btn"
                                                 @click="deleteData(task)"

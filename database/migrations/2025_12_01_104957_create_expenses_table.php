@@ -13,15 +13,13 @@ return new class extends Migration
     {
         Schema::create('expenses', function (Blueprint $table) {
             $table->id();
-            $table->foreignId('employee_id')->constrained('employees')->onDelete('cascade');
-            $table->foreignId('company_id')->constrained('companies')->onDelete('cascade');
-            $table->string('company_name');
+            $table->foreignId('balance_id')->constrained('balances')->onDelete('cascade');
+            $table->foreignId('created_by')->constrained('users')->onDelete('cascade');
+            $table->string('title');
+            $table->text('description');
             $table->decimal('amount', 10, 2);
-            $table->enum('recipient_name',['vendor', 'government']);
-            $table->enum('payment_method',['cash', 'transfer', 'card']);
-            $table->boolean('client_paid')->default(false);
-            $table->enum('status',['pending', 'approved', 'rejected'])->default('pending');
-            $table->longText('reason')->nullable();
+            $table->boolean('is_approved')->default(false);
+            $table->string('attachment')->nullable();
             $table->timestamps();
         });
     }

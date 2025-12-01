@@ -10,19 +10,20 @@ import { reactive } from "vue";
 import { can } from "@/helpers/can";
 
 const props = defineProps({
-    expenses: Array,
-    balances: Array,
+    quotation: Array,
+    clients: Array,
 });
 
 // ========== base form ==========
 const baseForm = ref({
     id: "",
-    balance_id: "",
-    title: "",
-    description: "",
-    amount: "",
-    is_approved: "",
-    attachment: null
+    client_id: "",
+    quotation_number: "",
+    service_name: "",
+    service_description: "",
+    quantity: "",
+    unit_price: "",
+    tax: "",
 });
 
 const form = useForm({ ...baseForm.value });
@@ -31,27 +32,31 @@ const editForm = useForm({ ...baseForm.value });
 // ========== show all data ==========
 const tableHeaders = [
     { key: "id", label: "ID", sortable: true },
-    { key: "title", label: "Title", sortable: true },
-    { key: "description", label: "Description", sortable: true },
-    { key: "amount", label: "Amount", sortable: true },
-    { key: "attachment", label: "Attachment", sortable: true },
-    { key: "status", label: "Status", sortable: true },
+    { key: "quotation_number", label: "Quotation Number", sortable: true },
+    { key: "service_name", label: "Service Name", sortable: true },
+    { key: "service_description", label: "Service Description", sortable: true },
+    { key: "quantity", label: "Quantity", sortable: true },
+    { key: "unit_price", label: "Unit Price", sortable: true },
+    { key: "tax", label: "Tax", sortable: true },
     { key: "actions", label: "Actions", sortable: false },
 ];
 
 const searchQuery = ref("");
 
 const filteredData = computed(() => {
-    let data = props.expenses ?? [];
+    let data = props.quotation ?? [];
 
     if (searchQuery.value) {
         const s = searchQuery.value.toLowerCase();
 
         data = data.filter((c) => {
             return (
-                String(c.title ?? "").toLowerCase().includes(s) ||
-                String(c.description ?? "").toLowerCase().includes(s) ||
-                String(c.amount ?? "").toLowerCase().includes(s)
+                String(c.quotation_number ?? "").toLowerCase().includes(s) ||
+                String(c.service_name ?? "").toLowerCase().includes(s) ||
+                String(c.service_description ?? "").toLowerCase().includes(s) ||
+                String(c.quantity ?? "").toLowerCase().includes(s) ||
+                String(c.unit_price ?? "").toLowerCase().includes(s) ||
+                String(c.tax ?? "").toLowerCase().includes(s)
             );
         });
     }
@@ -70,16 +75,12 @@ const filteredData = computed(() => {
 // ============== Create ==============
 const toggleCreateModal = ref(false);
 
-const expenseCreateModal = () => {
+const quotationCreateModal = () => {
     toggleCreateModal.value = true;
 };
 
-const handleFileUpload = (event) => {
-    form.attachment = event.target.files[0];
-};
-
 const handleSubmit = async () => {
-    if (!form.title || !form.description || !form.amount || !form.attachment || !form.balance_id) {
+    if (!form.client_id  || !form.service_name || !form.service_description || !form.quantity || !form.unit_price || !form.tax) {
         Swal.fire(
             "Validation Error",
             "Please fill all required fields",
@@ -88,9 +89,9 @@ const handleSubmit = async () => {
         return;
     }
 
-    form.post("/expense/store", {
+    form.post("/quotation/store", {
         onSuccess: () => {
-            Swal.fire("Created!", "Expense added successfully", "success");
+            Swal.fire("Created!", "Quotation added successfully", "success");
             toggleCreateModal.value = false;
             form.reset();
         },
@@ -104,33 +105,23 @@ const handleSubmit = async () => {
 // ============== Edit modal ==============
 const toggleEditModal = ref(false);
 
-const editModal = (expense) => {
+const editModal = (quotation) => {
     toggleEditModal.value = true;
 
-    editForm.id = expense.id;
-    editForm.balance_id = expense.balance_id;
-    editForm.title = expense.title;
-    editForm.description = expense.description;
-    editForm.amount = expense.amount;
-    editForm.attachment = expense.attachment;
-
-    nextTick(() => {
-        $(".image").dropify({
-            defaultFile: expense.attachment || "",
-            messages: {
-                default: "Drag and drop a file here or click",
-                replace: "Drag and drop or click to replace",
-                remove: "Remove",
-                error: "Oops, something went wrong.",
-            },
-        });
-    });
+    editForm.id = quotation.id;
+    editForm.client_id = quotation.client_id;
+    editForm.quotation_number = quotation.quotation_number;
+    editForm.service_name = quotation.service_name;
+    editForm.service_description = quotation.service_description;
+    editForm.quantity = quotation.quantity;
+    editForm.unit_price = quotation.unit_price;
+    editForm.tax = quotation.tax;
 };
 
 const handleUpdateSubmit = () => {
-    editForm.post(`/expense/update/${editForm.id}`, {
+    editForm.post(`/quotation/update/${editForm.id}`, {
         onSuccess: () => {
-            Swal.fire("Updated!", "Expense updated successfully", "success");
+            Swal.fire("Updated!", "quotation updated successfully", "success");
             toggleEditModal.value = false;
             editForm.reset();
         },
@@ -138,7 +129,7 @@ const handleUpdateSubmit = () => {
 };
 
 // ============== delete ==============
-const deleteData = (expense) => {
+const deleteData = (quotation) => {
     Swal.fire({
         title: "Are you sure?",
         text: "You won't be able to revert this!",
@@ -148,11 +139,11 @@ const deleteData = (expense) => {
         cancelButtonText: "Cancel",
     }).then((result) => {
         if (result.isConfirmed) {
-            form.delete(`/expense/destroy/${expense.id}`, {
+            form.delete(`/quotation/destroy/${quotation.id}`, {
                 onSuccess: () => {
                     Swal.fire(
                         "Deleted!",
-                        "Task deleted successfully",
+                        "Quotation deleted successfully",
                         "success"
                     );
                 },
@@ -168,25 +159,17 @@ const deleteData = (expense) => {
 // ============== view ==============
 const toggleViewModal = ref(false);
 
-const viewModal = (expense) => {
+const viewModal = (quotation) => {
     toggleViewModal.value = true;
-    editForm.id = expense.id;
-    editForm.balance_id = expense.balance_id;
-    editForm.title = expense.title;
-    editForm.description = expense.description;
-    editForm.amount = expense.amount;
-    editForm.attachment = expense.attachment;
-    editForm.is_approved = expense.is_approved;
-};
-
-const approvedSubmit = () => {
-    editForm.post(`/expense/approved/${editForm.id}`, {
-        onSuccess: () => {
-            Swal.fire("Approvedd!", "Expense approved successfully", "success");
-            toggleViewModal.value = false;
-            viewForm.reset();
-        },
-    });
+    editForm.id = quotation.id;
+    editForm.client_id = quotation.client_id;
+    editForm.quotation_number = quotation.quotation_number;
+    editForm.service_name = quotation.service_name;
+    editForm.service_description = quotation.service_description;
+    editForm.quantity = quotation.quantity;
+    editForm.unit_price = quotation.unit_price;
+    editForm.tax = quotation.tax;
+    editForm.total_amount = quotation.total_amount;
 };
 
 // ============== PAGINATION ==============
@@ -221,27 +204,11 @@ watch(searchQuery, () => {
 });
 
 
-const initDropify = () => {
-    $(".dropify").dropify({
-        height: 100,
-        messages: {
-            default: "Drag and drop a file here or click",
-            replace: "Drag and drop or click to replace",
-            remove: "Remove",
-            error: "Oops, something went wrong.",
-        },
-    });
-};
-
-onMounted(() => {
-    initDropify();
-});
-
 </script>
 
 <template>
     <Layout>
-        <PageHeader title="List View" pageTitle="Expenses" />
+        <PageHeader title="List View" pageTitle="Quotation" />
 
         <BRow>
             <BCol lg="12">
@@ -250,12 +217,12 @@ onMounted(() => {
                     <BCardHeader class="border-0">
                         <div class="d-flex align-items-center">
                             <h5 class="card-title mb-0 flex-grow-1">
-                                All Expense
+                                All Quotation
                             </h5>
                             <div class="d-flex gap-2">
-                                <BButton v-if="can('expense_create')" variant="danger" @click="expenseCreateModal">
+                                <BButton v-if="can('quotation_create')" variant="danger" @click="quotationCreateModal">
                                     <i class="ri-add-line me-1"></i>
-                                    Create Expense
+                                    Create Quotation
                                 </BButton>
                             </div>
                         </div>
@@ -309,34 +276,31 @@ onMounted(() => {
                                 </thead>
 
                                 <tbody>
-                                    <tr v-for="(expense, i) in resultQuery" :key="i">
+                                    <tr v-for="(quotation, i) in resultQuery" :key="i">
                                         <td>
                                             <input class="form-check-input" type="checkbox" />
                                         </td>
 
-                                        <td>{{ expense.id }}</td>
-                                        <td>{{ expense.title }}</td>
-                                        <td>{{ expense.description }}</td>
-                                        <td>{{ expense.amount }}</td>
-                                        <td>
-                                            <img :src="expense.attachment" alt="" class="avatar-xs rounded">
-                                        </td>
-                                        <td>
-                                            <span v-if="expense.is_approved == 1" class="badge bg-success">Approved</span>
-                                            <span v-else class="badge bg-danger">Pending</span>
-                                        </td>
+                                        <td>{{ quotation.id }}</td>
+                                        <!-- <td>{{ quotation.client.name }}</td> -->
+                                        <td>{{ quotation.quotation_number }}</td>
+                                        <td>{{ quotation.service_name }}</td>
+                                        <td>{{ quotation.service_description }}</td>
+                                        <td>{{ quotation.quantity }}</td>
+                                        <td>{{ quotation.unit_price }}</td>
+                                        <td>{{ quotation.tax }}</td>
                                         <td class="d-flex gap-2">
-                                            <BButton v-if="can('expense_edit')" variant="success px-3"
-                                                @click="editModal(expense)">
+                                            <BButton v-if="can('quotation_edit')" variant="success px-3"
+                                                @click="editModal(quotation)">
                                                 Edit
                                             </BButton>
 
-                                            <BButton v-if="can('expense_delete')" variant="danger px-3"
-                                                @click="deleteData(expense)">
+                                            <BButton v-if="can('quotation_delete')" variant="danger px-3"
+                                                @click="deleteData(quotation)">
                                                 Delete
                                             </BButton>
 
-                                            <BButton variant="info px-3" @click="viewModal(expense)">
+                                            <BButton variant="info px-3" @click="viewModal(quotation)">
                                                 View
                                             </BButton>
                                         </td>
@@ -378,52 +342,62 @@ onMounted(() => {
             </BCol>
         </BRow>
 
-        <!-- expense create modal -->
+        <!-- quotation create modal -->
         <BModal v-model="toggleCreateModal" id="showmodal" modal-class="zoomIn" hide-footer
-            header-class="p-3 bg-info-subtle expenseModal" class="v-modal-custom" centered size="lg"
-            :title="'Add Expense'">
+            header-class="p-3 bg-info-subtle quotationModal" class="v-modal-custom" centered size="lg"
+            :title="'Add Quotation'">
             <BFrom id="addform" class="tablelist-form" autocomplete="off">
                 <BRow class="g-3">
-                    <!-- Balance / Company Name -->
+                    <!-- Client -->
                     <BCol lg="6">
-                        <label class="form-label">Balance</label>
-                        <select class="form-control" v-model="form.balance_id"
-                            :class="{ 'is-invalid': submitted && !form.balance_id }">
-                            <option value="">Select Balance</option>
-                            <option v-for="balance in balances" :key="balance.id" :value="balance.id">
-                                {{ balance.name }}
+                        <label class="form-label">Client</label>
+                        <select class="form-control" v-model="form.client_id"
+                            :class="{ 'is-invalid': submitted && !form.client_id }">
+                            <option value="">Select Client</option>
+                            <option v-for="client in clients" :key="client.id" :value="client.id">
+                                {{ client.name }}
                             </option>
                         </select>
-                        <div class="invalid-feedback">Please select a balance.</div>
+                        <div class="invalid-feedback">Please select a client.</div>
                     </BCol>
 
-                    <!-- Title -->
+                    <!-- Service Name -->
                     <BCol lg="6">
-                        <label class="form-label">Title</label>
-                        <input type="text" class="form-control" placeholder="Enter title" v-model="form.title"
-                            :class="{ 'is-invalid': submitted && !form.title }" />
-                        <div class="invalid-feedback">Please enter title.</div>
+                        <label class="form-label">Service Name</label>
+                        <input type="text" class="form-control" placeholder="Enter Service Name"
+                            v-model="form.service_name"
+                            :class="{ 'is-invalid': submitted && !form.service_name }" />
+                        <div class="invalid-feedback">Please enter service name.</div>
                     </BCol>
 
-                    <!-- Amount -->
+                    <!-- Quantity -->
                     <BCol lg="6">
-                        <label class="form-label">Amount</label>
-                        <input type="number" class="form-control" placeholder="Enter amount" v-model="form.amount"
-                            :class="{ 'is-invalid': submitted && !form.amount }" />
-                        <div class="invalid-feedback">Please enter amount.</div>
+                        <label class="form-label">Quantity</label>
+                        <input type="number" class="form-control" placeholder="Enter Quantity"
+                            v-model="form.quantity"
+                            :class="{ 'is-invalid': submitted && !form.quantity }" />
+                        <div class="invalid-feedback">Please enter quantity.</div>
                     </BCol>
 
-                    <!-- Description -->
-                    <BCol lg="12">
-                        <label class="form-label">Description</label>
-                        <textarea class="form-control" placeholder="Enter description"
-                            v-model="form.description"></textarea>
+                    <!-- Unit Price -->
+                    <BCol lg="6">
+                        <label class="form-label">Unit Price</label>
+                        <input type="number" class="form-control" placeholder="Enter Unit Price"
+                            v-model="form.unit_price"
+                            :class="{ 'is-invalid': submitted && !form.unit_price }" />
+                        <div class="invalid-feedback">Please enter unit price.</div>
                     </BCol>
 
-                    <!-- Attachment -->
+                    <!-- Tax -->
+                    <BCol lg="6">
+                        <label class="form-label">Tax</label>
+                        <input type="number" class="form-control" placeholder="Enter Tax" v-model="form.tax" />
+                    </BCol>
+                    <!-- Service Description -->
                     <BCol lg="12">
-                        <label class="form-label">Attachment</label>
-                        <input type="file" class="form-control dropify" @change="handleFileUpload($event)" />
+                        <label class="form-label">Service Description</label>
+                        <textarea class="form-control" placeholder="Enter Description"
+                            v-model="form.service_description"></textarea>
                     </BCol>
                 </BRow>
 
@@ -433,59 +407,68 @@ onMounted(() => {
                     </BButton>
 
                     <BButton type="submit" variant="success" @click="handleSubmit">
-                        Expense Create
+                        Quotation Request
                     </BButton>
                 </div>
             </BFrom>
         </BModal>
 
-        <!-- expense edit modal -->
+        <!-- quotation edit modal -->
         <BModal v-model="toggleEditModal" id="showmodal" modal-class="zoomIn" hide-footer
-            header-class="p-3 bg-info-subtle expenseModal" class="v-modal-custom" centered size="lg"
-            :title="'Edit expense'">
+            header-class="p-3 bg-info-subtle quotationModal" class="v-modal-custom" centered size="lg"
+            :title="'Edit quotation'">
             <BFrom id="addform" class="tablelist-form" autocomplete="off">
                 <BRow class="g-3">
-                    <!-- Balance / Company Name -->
+                    <!-- Client -->
                     <BCol lg="6">
-                        <label class="form-label">Balance</label>
-                        <select class="form-control" v-model="editForm.balance_id"
-                            :class="{ 'is-invalid': submitted && !editForm.balance_id }">
-                            <option value="">Select Balance</option>
-                            <option v-for="balance in balances" :key="balance.id" :value="balance.id">
-                                {{ balance.name }}
+                        <label class="form-label">Client</label>
+                        <select class="form-control" v-model="editForm.client_id"
+                            :class="{ 'is-invalid': submitted && !editForm.client_id }">
+                            <option value="">Select Client</option>
+                            <option v-for="client in clients" :key="client.id" :value="client.id">
+                                {{ client.name }}
                             </option>
                         </select>
-                        <div class="invalid-feedback">Please select a balance.</div>
+                        <div class="invalid-feedback">Please select a client.</div>
                     </BCol>
 
-                    <!-- Title -->
+                    <!-- Service Name -->
                     <BCol lg="6">
-                        <label class="form-label">Title</label>
-                        <input type="text" class="form-control" placeholder="Enter title" v-model="editForm.title"
-                            :class="{ 'is-invalid': submitted && !editForm.title }" />
-                        <div class="invalid-feedback">Please enter title.</div>
+                        <label class="form-label">Service Name</label>
+                        <input type="text" class="form-control" placeholder="Enter Service Name"
+                            v-model="editForm.service_name"
+                            :class="{ 'is-invalid': submitted && !editForm.service_name }" />
+                        <div class="invalid-feedback">Please enter service name.</div>
                     </BCol>
 
-                    <!-- Amount -->
+                    <!-- Quantity -->
                     <BCol lg="6">
-                        <label class="form-label">Amount</label>
-                        <input type="number" class="form-control" placeholder="Enter amount" v-model="editForm.amount"
-                            :class="{ 'is-invalid': submitted && !editForm.amount }" />
-                        <div class="invalid-feedback">Please enter amount.</div>
+                        <label class="form-label">Quantity</label>
+                        <input type="number" class="form-control" placeholder="Enter Quantity"
+                            v-model="editForm.quantity"
+                            :class="{ 'is-invalid': submitted && !editForm.quantity }" />
+                        <div class="invalid-feedback">Please enter quantity.</div>
                     </BCol>
 
-                    <!-- Description -->
-                    <BCol lg="12">
-                        <label class="form-label">Description</label>
-                        <textarea class="form-control" placeholder="Enter description"
-                            v-model="editForm.description"></textarea>
+                    <!-- Unit Price -->
+                    <BCol lg="6">
+                        <label class="form-label">Unit Price</label>
+                        <input type="number" class="form-control" placeholder="Enter Unit Price"
+                            v-model="editForm.unit_price"
+                            :class="{ 'is-invalid': submitted && !editForm.unit_price }" />
+                        <div class="invalid-feedback">Please enter unit price.</div>
                     </BCol>
 
-                    <!-- Attachment -->
+                    <!-- Tax -->
+                    <BCol lg="6">
+                        <label class="form-label">Tax</label>
+                        <input type="number" class="form-control" placeholder="Enter Tax" v-model="editForm.tax" />
+                    </BCol>
+                    <!-- Service Description -->
                     <BCol lg="12">
-                        <label class="form-label">Attachment</label>
-                        <input type="file" class="form-control image"
-                            @change="e => editForm.attachment = e.target.files[0]" />
+                        <label class="form-label">Service Description</label>
+                        <textarea class="form-control" placeholder="Enter Description"
+                            v-model="editForm.service_description"></textarea>
                     </BCol>
                 </BRow>
 
@@ -495,87 +478,59 @@ onMounted(() => {
                     </BButton>
 
                     <BButton type="submit" variant="success" @click="handleUpdateSubmit">
-                        Update Expense
+                        Update quotation
                     </BButton>
                 </div>
             </BFrom>
         </BModal>
 
-        <!-- expense view modal -->
+        <!-- quotation view modal -->
         <BModal v-model="toggleViewModal" id="showmodal" modal-class="zoomIn" hide-footer
-            header-class="p-3 bg-info-subtle expenseModal" class="v-modal-custom" centered size="lg"
-            :title="'View Expense Information'">
+            header-class="p-3 bg-info-subtle quotationModal" class="v-modal-custom" centered size="lg"
+            :title="'View quotation Information'">
             <BFrom id="addform" class="tablelist-form" autocomplete="off">
                 <BRow class="">
-                    <!-- medthod Name -->
+                    <!-- client Name -->
                     <BCol lg="6">
-                        <label class="form-label">Medthod Name</label>
-                        <p class="form-control">{{ editForm.balance_id }}</p>
+                        <label class="form-label">client Name</label>
+                        <p class="form-control">{{ editForm.client_id }}</p>
                     </BCol>
 
-                    <!-- Title -->
+                    <!-- Service Name -->
                     <BCol lg="6">
-                        <label class="form-label">Title</label>
-                        <p class="form-control">{{ editForm.title }}</p>
+                        <label class="form-label">Service Name</label>
+                        <p class="form-control">{{ editForm.service_name }}</p>
                     </BCol>
 
-                    <!-- Amount -->
+                    <!-- Quantity -->
                     <BCol lg="6">
-                        <label class="form-label">Amount</label>
-                        <p class="form-control">{{ editForm.amount }}</p>
+                        <label class="form-label">Quantity</label>
+                        <p class="form-control">{{ editForm.quantity }}</p>
                     </BCol>
 
-                    <!-- Description -->
+                    <!-- Unit Price -->
+                    <BCol lg="6">
+                        <label class="form-label">Unit Price</label>
+                        <p class="form-control">{{ editForm.unit_price }}</p>
+                    </BCol>
+
+                    <!-- Tax -->
+                    <BCol lg="6">
+                        <label class="form-label">Tax</label>
+                        <p class="form-control">{{ editForm.tax }}</p>
+                    </BCol>
+                    <!-- total_amount -->
+                    <BCol lg="6">
+                        <label class="form-label">Total Amount</label>
+                        <p class="form-control">{{ editForm.total_amount }}</p>
+                    </BCol>
+                    <!-- Service Description -->
                     <BCol lg="12">
-                        <label class="form-label">Description</label>
-                        <p class="form-control">{{ editForm.description }}</p>
-                    </BCol>
-
-                    <!-- Attachment -->
-                    <BCol lg="12">
-                        <div class="">
-                            <p class="form-label">Attachment</p>
-                            <div class="border rounded py-2">
-                                <img :src="editForm.attachment" class="img-fluid w-25 h-25 d-block mx-auto rounded" />
-                            </div>
-                        </div>
-                    </BCol>
-
-                    <BCol lg="6" class="mt-3">
-                        <label class="form-label">Status</label>
-                        <select class="form-control" v-model="editForm.is_approved"
-                            :class="{ 'is-invalid': submitted && !editForm.is_approved }">
-                            <option value="">Select Balance</option>
-                            <option value="1">Approved</option>
-                            <option value="0">Pending</option>
-                        </select>
-                        <div class="invalid-feedback">Please select a balance.</div>
+                        <label class="form-label">Service Description</label>
+                        <p class="form-control">{{ editForm.service_description }}</p>
                     </BCol>
                 </BRow>
-
-                <div class="hstack gap-2 justify-content-end mt-3">
-                    <BButton type="button" variant="light" @click="toggleViewModal = false">
-                        Close
-                    </BButton>
-
-                    <BButton type="submit" variant="success" @click="approvedSubmit">
-                       Approved
-                    </BButton>
-                </div>
-
             </BFrom>
         </BModal>
     </Layout>
 </template>
-<style>
-.dropify-wrapper .dropify-preview .dropify-render img {
-    width: 100% !important;
-    height: auto !important;
-    object-fit: contain;
-}
-
-.dropify-wrapper .dropify-message p {
-    font-size: 16px;
-    text-align: center;
-}
-</style>

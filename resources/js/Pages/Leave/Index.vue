@@ -4,6 +4,7 @@ import PageHeader from "@/Components/page-header.vue";
 import { ref, reactive, computed, onMounted, watch, nextTick } from "vue";
 import { router, useForm } from "@inertiajs/vue3";
 import $ from "jquery";
+import { can } from "@/helpers/can";
 
 const props = defineProps({
     leaves: Array,
@@ -242,7 +243,7 @@ onMounted(() => {
                                     >
                                         <i class="ri-delete-bin-2-line"></i>
                                     </BButton>
-                                    <BButton
+                                    <BButton v-if="can('create_leave')"
                                         variant="danger"
                                         class="add-btn"
                                         @click="toggleModal"
@@ -462,7 +463,7 @@ onMounted(() => {
                                         </td>
                                         <td>{{ leave.reason.length > 20 ? leave.reason.slice(0, 20) + '...' : leave.reason }}</td>
                                         <td class="d-flex gap-2">
-                                            <BButton
+                                            <BButton v-if="can('leave_edit')"
                                                 variant="danger px-3"
                                                 class="add-btn"
                                                 @click="toggleEditModal(leave)"

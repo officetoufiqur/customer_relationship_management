@@ -82,7 +82,7 @@ const updatePassword = () => {
         </template>
 
         <template #actions>
-            <BButton variant="success w-100" type="submit" :class="{ 'opacity-25': form.processing }" :disabled="form.processing">Save</BButton>
+            <BButton variant="success w-25" type="submit" :class="{ 'opacity-25': form.processing }" :disabled="form.processing">Save</BButton>
             <p v-if="form.recentlySuccessful" class="alert alert-success mt-3">Password Updated.</p>
         </template>
     </FormSection>

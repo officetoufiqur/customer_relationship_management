@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Controllers\BalanceController;
 use App\Http\Controllers\ClientProfileController;
 use App\Http\Controllers\CommercialAddressController;
 use App\Http\Controllers\CompanyController;
@@ -9,6 +10,7 @@ use App\Http\Controllers\ExpenseController;
 use App\Http\Controllers\InvoiceController;
 use App\Http\Controllers\LeaveController;
 use App\Http\Controllers\PermissionController;
+use App\Http\Controllers\QuotationController;
 use App\Http\Controllers\RoleController;
 use App\Http\Controllers\TaskController;
 use App\Http\Controllers\VelzonRoutesController;
@@ -26,87 +28,95 @@ use Illuminate\Support\Facades\Route;
 */
 
 Route::middleware(['auth:sanctum', config('jetstream.auth_session'), 'verified'])->group(function () {
-    // Route::controller(EmployeeController::class)->group(function () {
-    //     Route::get('/employees/list', 'index')->name('employees.list')->middleware('permission:view_users');
-    //     Route::post('/employees/store', 'store')->name('employees.store')->middleware('permission:create_users');
-    //     Route::put('/employees/update/{id}', 'update')->name('employees.update')->middleware('permission:update_users');
-    //     Route::get('/employee/profile/{id}', 'employeeProfile')->name('employee.profile');
-    //     Route::get('/profile/setting/{id}', 'pages_profile_setting')->name('profile.setting');
-    // });
-    Route::get('/', [DashboardController::class, 'dashboard'])->name('dashboard');
-
+    
     Route::controller(EmployeeController::class)->group(function () {
         Route::get('/employees/list', 'index')->name('employees.list');
-        Route::post('/employees/store', 'store')->name('employees.store');
-        Route::put('/employees/update/{id}', 'update')->name('employees.update');
+        Route::post('/employees/store', 'store')->name('employees.store')->middleware('permission:create_users');
+        Route::put('/employees/update/{id}', 'update')->name('employees.update')->middleware('permission:update_users');
         Route::get('/employee/profile/{id}', 'employeeProfile')->name('employee.profile');
         Route::get('/profile/setting/{id}', 'pages_profile_setting')->name('profile.setting');
     });
 
+    Route::get('/', [DashboardController::class, 'dashboard'])->name('dashboard');
+
     Route::controller(LeaveController::class)->group(function () {
         Route::get('/leave/list', 'index')->name('leave.list');
-        Route::post('/leave/store', 'store')->name('leave.store');
-        Route::post('/leave/update/{id}', 'update')->name('leave.update');
+        Route::post('/leave/store', 'store')->name('leave.store')->middleware('permission:create_leaves');
+        Route::post('/leave/update/{id}', 'update')->name('leave.update')->middleware('permission:update_leaves');
         Route::put('/leave/update/status/{id}', 'updateStatus')->name('leave.update.status');
     });
 
     Route::controller(TaskController::class)->group(function () {
         Route::get('/tasks-list', 'tasksList')->name('tasks.list');
-        Route::post('/tasks/store', 'tasksStore')->name('tasks.store');
-        Route::post('/task/update/{id}', 'tasksUpdate')->name('tasks.update');
+        Route::post('/tasks/store', 'tasksStore')->name('tasks.store')->middleware('permission:create_tasks');
+        Route::post('/task/update/{id}', 'tasksUpdate')->name('tasks.update')->middleware('permission:update_tasks');
         Route::get('/task/view/{id}', 'tasksView')->name('tasks.view');
-        Route::delete('/tasks/destroy/{id}', 'tasksDestroy')->name('tasks.destroy');
+        Route::delete('/tasks/destroy/{id}', 'tasksDestroy')->name('tasks.destroy')->middleware('permission:delete_tasks');
         Route::post('/task/reassign/update/{id}', 'reassign')->name('task.reassign');
     });
 
     Route::controller(CompanyController::class)->group(function () {
         Route::get('/companies/list', 'companyList')->name('company.list');
-        Route::post('/companys/store', 'companysStore')->name('companys.store');
-        Route::post('/company/update/{id}', 'companysUpdate')->name('companys.update');
-        Route::delete('/company/destroy/{id}', 'companysDestroy')->name('companys.destroy');
+        Route::post('/companys/store', 'companysStore')->name('companys.store')->middleware('permission:create_companies');
+        Route::post('/company/update/{id}', 'companysUpdate')->name('companys.update')->middleware('permission:update_companies');
+        Route::delete('/company/destroy/{id}', 'companysDestroy')->name('companys.destroy')->middleware('permission:delete_companies');
     });
 
     Route::controller(ClientProfileController::class)->group(function () {
         Route::get('/client/list', 'clientList')->name('client.list');
-        Route::post('/clients/store', 'clientsStore')->name('clients.store');
-        Route::post('/client/update/{id}', 'clientUpdate')->name('client.update');
-        Route::delete('/client/destroy/{id}', 'clientDestroy')->name('client.destroy');
+        Route::post('/clients/store', 'clientsStore')->name('clients.store')->middleware('permission:create_clients');
+        Route::post('/client/update/{id}', 'clientUpdate')->name('client.update')->middleware('permission:update_clients');
+        Route::delete('/client/destroy/{id}', 'clientDestroy')->name('client.destroy')->middleware('permission:delete_clients');
 
         Route::get('/client/intractions/list', 'clientIntractionList')->name('client.intraction.list');
-        Route::post('/client/quotation/{id}', 'clientQuotation')->name('client.quotation');
+        Route::post('/client/quotation/{id}', 'clientQuotation')->name('client.quotation')->middleware('permission:send_quotation');
     });
 
     Route::controller(CommercialAddressController::class)->group(function () {
         Route::get('/commercial/address', 'commercialAddress')->name('commercial.address');
-        Route::post('/commercial/address/store', 'commercialAddressStore')->name('commercial.address.store');
-        Route::post('/commercial/address/update/{id}', 'commercialAddressUpdate')->name('commercial.address.update');
-        Route::delete('/commercial/address/destroy/{id}', 'commercialAddressDestroy')->name('commercial.address.destroy');
+        Route::post('/commercial/address/store', 'commercialAddressStore')->name('commercial.address.store')->middleware('permission:address_create');
+        Route::post('/commercial/address/update/{id}', 'commercialAddressUpdate')->name('commercial.address.update')->middleware('permission:address_update');
+        Route::delete('/commercial/address/destroy/{id}', 'commercialAddressDestroy')->name('commercial.address.destroy')->middleware('permission:address_delete');
         Route::get('commercial/address/range', 'rangeReport')->name('commercial.address.range');
     });
 
     Route::controller(ExpenseController::class)->group(function () {
-        Route::get('/expense/list', 'expenseList')->name('expense.list');
+        Route::get('/expenses', 'index')->name('expense');
+        Route::post('/expense/store', 'store')->name('expense.store')->middleware('permission:expense_create');
+        Route::post('/expense/update/{id}', 'update')->name('expense.update')->middleware('permission:expense_update');
+        Route::post('/expense/approved/{id}', 'expenseStatus')->name('expense.status');
+
         Route::get('/expense/request', 'expenseRequest')->name('expense.request');
-        Route::post('/expense/status/update/{id}', 'expenseStatus')->name('expense.status');
-        Route::post('/expense/store', 'expenseStore')->name('expense.store');
-        Route::post('/expense/update/{id}', 'expenseUpdate')->name('expense.update');
-        Route::delete('/expense/destroy/{id}', 'expenseDestroy')->name('expense.destroy');
+        Route::delete('/expense/destroy/{id}', 'expenseDestroy')->name('expense.destroy')->middleware('permission:expense_delete');
         Route::get('/expense/reports/monthly', 'monthlyReport')->name('reports.monthly');
         Route::get('/financial/logs', 'financiaLogs')->name('financial.logs');
     });
 
     Route::controller(PermissionController::class)->group(function () {
         Route::get('/permission', 'index')->name('permission');
-        Route::post('/permission/store', 'store')->name('permission.store');
-        Route::post('/permission/update/{id}', 'update')->name('permission.update');
-        Route::delete('/permission/destroy/{id}', 'destroy')->name('permission.destroy');
+        Route::post('/permission/store', 'store')->name('permission.store')->middleware('permission:permission_create');
+        Route::post('/permission/update/{id}', 'update')->name('permission.update')->middleware('permission:permission_update');
+        Route::delete('/permission/destroy/{id}', 'destroy')->name('permission.destroy')->middleware('permission:permission_delete');
     });
 
     Route::controller(RoleController::class)->group(function () {
         Route::get('/roles', 'index')->name('roles');
-        Route::post('/roles/store', 'store')->name('roles.store');
-        Route::post('/roles/update/{id}', 'update')->name('roles.update');
-        Route::delete('/roles/destroy/{id}', 'destroy')->name('roles.destroy');
+        Route::post('/roles/store', 'store')->name('roles.store')->middleware('permission:create_roles');
+        Route::post('/roles/update/{id}', 'update')->name('roles.update')->middleware('permission:update_roles');
+        Route::delete('/roles/destroy/{id}', 'destroy')->name('roles.destroy')->middleware('permission:delete_roles');
+    });
+
+    Route::controller(BalanceController::class)->group(function () {
+        Route::get('/balance', 'index')->name('balance');
+        Route::post('/balance/store', 'store')->name('balance.store');
+        Route::post('/balance/transfer', 'transfer')->name('balance.transfer');
+    });
+
+     Route::controller(QuotationController::class)->group(function () {
+        Route::get('/quotation', 'index')->name('quotation');
+        Route::post('/quotation/store', 'store')->name('quotation.store');
+        Route::post('/quotation/update/{id}', 'update')->name('quotation.update');
+        Route::delete('/quotation/destroy/{id}', 'destroy')->name('quotation.destroy');
     });
 
     Route::get('/invoice/download/{id}', [InvoiceController::class, 'download'])->name('invoice.download');

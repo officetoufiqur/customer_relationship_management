@@ -23,22 +23,23 @@ defineProps({
         </template>
 
         <div>
-            <BRow class="justify-content-center">
+            <BRow>
                 <BCol lg="6">
                     <div v-if="$page.props.jetstream.canUpdateProfileInformation">
                         <UpdateProfileInformationForm :user="$page.props.auth.user" />
                     </div>
-
+                </BCol>
+                <BCol lg="6">
                     <div v-if="$page.props.jetstream.canUpdatePassword">
                         <UpdatePasswordForm />
                     </div>
-
+                </BCol>
+                <BCol lg="6">
                     <div v-if="$page.props.jetstream.canManageTwoFactorAuthentication">
                         <TwoFactorAuthenticationForm :requires-confirmation="confirmsTwoFactorAuthentication" />
                     </div>
-
-                    <LogoutOtherBrowserSessionsForm :sessions="sessions" />
-
+                </BCol>
+                <BCol lg="6">
                     <template v-if="$page.props.jetstream.hasAccountDeletionFeatures">
                         <DeleteUserForm />
                     </template>

@@ -14,7 +14,7 @@ return new class extends Migration
         Schema::create('financial_logs', function (Blueprint $table) {
             $table->id();
 
-            $table->foreignId('expense_id')->nullable()->constrained('expenses')->onDelete('set null');
+            // $table->foreignId('expense_id')->nullable()->constrained('expenses')->onDelete('set null');
             $table->foreignId('employee_id')->nullable()->constrained('employees')->onDelete('set null');
             $table->foreignId('company_id')->nullable()->constrained('companies')->onDelete('set null');
 

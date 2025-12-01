@@ -16,6 +16,11 @@ const props = defineProps({
      companys: Number,
      address: Number,
      monthly: Array,
+     dealWon: Number,
+     dealPending: Number,
+     dealLoss: Number,
+     performance: Array,
+     tasks: Array,
 });
 
 //============== count ==============
@@ -51,6 +56,8 @@ const crmWidgets = ref([
     prefix: "",
   }
 ]);
+
+
 
 
 </script>
@@ -90,31 +97,19 @@ const crmWidgets = ref([
     </BRow>
 
     <BRow>
-      <BCol xxl="3" md="6">
-        <SalesForecast />
+      <BCol xxl="5" md="6">
+        <SalesForecast :dealWon="props.dealWon" :dealPending="props.dealPending" :dealLoss="props.dealLoss" />
       </BCol>
-
-      <BCol xxl="3" md="6">
-        <DealType />
-      </BCol>
-      <BCol xxl="6">
+      <BCol xxl="7">
         <BalanceOverview :monthlyData="monthly" />
       </BCol>
     </BRow>
     <BRow>
-      <BCol xl="7">
-        <DealStatus />
+      <BCol xl="6">
+        <DealStatus :performance="performance" />
       </BCol>
-      <BCol xl="5">
-        <Tasks />
-      </BCol>
-    </BRow>
-    <BRow>
-      <BCol xxl="5">
-        <UpcomingActivity />
-      </BCol>
-      <BCol xxl="7">
-        <ClosingDeals />
+      <BCol xl="6">
+        <Tasks :tasks="tasks" />
       </BCol>
     </BRow>
   </Layout>

@@ -170,7 +170,7 @@ const disableTwoFactorAuthentication = () => {
             <div class="mt-3">
                 <div v-if="!twoFactorEnabled">
                     <ConfirmsPassword @confirmed="enableTwoFactorAuthentication">
-                        <BButton variant="danger w-100" type="button" :class="{ 'opacity-25': enabling }" :disabled="enabling">Enable</BButton>
+                        <BButton variant="danger w-25" type="button" :class="{ 'opacity-25': enabling }" :disabled="enabling">Enable</BButton>
                     </ConfirmsPassword>
                 </div>
 

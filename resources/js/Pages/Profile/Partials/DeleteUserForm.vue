@@ -45,7 +45,7 @@ const closeModal = () => {
             </div>
 
             <div class="mt-5">
-                <BButton variant="danger w-100" @click="confirmUserDeletion">Delete Account</BButton>
+                <BButton variant="danger w-25" @click="confirmUserDeletion">Delete Account</BButton>
             </div>
 
             <BModal v-model="confirmingUserDeletion" title="Delete Account" hide-footer header-class="bg-danger-subtle p-3">

@@ -4,6 +4,7 @@ import PageHeader from "@/Components/page-header.vue";
 import { ref, computed, watch, onMounted } from "vue";
 import { Link, useForm } from "@inertiajs/vue3";
 import Swal from "sweetalert2";
+import { can } from "@/helpers/can";
 
 const props = defineProps({
     companys: Array,
@@ -223,7 +224,7 @@ watch(searchQuery, () => {
                                 All Companies
                             </h5>
                             <div class="d-flex gap-2">
-                                <BButton variant="danger" @click="companyCreateModal">
+                                <BButton v-if="can('company_create')" variant="danger" @click="companyCreateModal">
                                     <i class="ri-add-line me-1"></i>
                                     Create Company
                                 </BButton>
@@ -301,11 +302,11 @@ watch(searchQuery, () => {
                                         <td>{{ company.renewal_status }}</td>
 
                                         <td class="d-flex gap-2">
-                                            <BButton variant="success px-3" @click="editModal(company)">
+                                            <BButton v-if="can('company_edit')" variant="success px-3" @click="editModal(company)">
                                                 Edit
                                             </BButton>
 
-                                            <BButton variant="danger px-3" @click="deleteData(company)">
+                                            <BButton v-if="can('company_delete')" variant="danger px-3" @click="deleteData(company)">
                                                 Delete
                                             </BButton>
 

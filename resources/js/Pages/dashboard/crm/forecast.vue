@@ -2,19 +2,24 @@
 import { ref } from "vue";
 import getChartColorsArray from "@/common/getChartColorsArray";
 
+const props = defineProps({
+  dealPending: Number,
+  dealWon: Number,
+  dealLoss: Number,
+})
 const series = ref([
   {
-    name: "Goal",
-    data: [37],
+    name: "Pending",
+    data: [props.dealPending],
   },
   {
-    name: "Pending Forcast",
-    data: [12],
+    name: "Won",
+    data: [props.dealWon],
   },
-  // {
-  //   name: "Revenue",
-  //   data: [18],
-  // },
+  {
+    name: "Loss",
+    data: [props.dealLoss],
+  },
 ]);
 
 const chartOptions = ref({
@@ -47,7 +52,7 @@ const chartOptions = ref({
       offsetY: 0,
     },
     title: {
-      text: "Total Forecasted Value",
+      text: "Total Deals Value",
       offsetX: 0,
       offsetY: -30,
       style: {
@@ -58,13 +63,14 @@ const chartOptions = ref({
     },
   },
   yaxis: {
+    min: 0,
+    max: 5, 
+    tickAmount: 5,
     labels: {
       formatter(value) {
-        return "$" + value + "k";
+        return value;
       },
     },
-    tickAmount: 4,
-    min: 0,
   },
   fill: {
     opacity: 1,
@@ -92,23 +98,8 @@ const chartOptions = ref({
 
 <template>
   <BCard no-body>
-    <BCardHeader class="align-items-center d-flex py-0">
-      <BCardTitle class="mb-0 flex-grow-1">Sales Forecast</BCardTitle>
-      <div class="flex-shrink-0">
-        <div class="dropdown card-header-dropdown">
-          <BDropdown variant="link" class="card-header-dropdown" toggle-class="text-reset dropdown-btn arrow-none"
-            menu-class="dropdown-menu-end" aria-haspopup="true"
-            :offset="{ alignmentAxis: -30, crossAxis: 0, mainAxis: 0 }">
-            <template #button-content><span class="fw-semibold text-uppercase fs-12">Sort by: </span><span
-                class="text-muted">Nov 2021<i class="mdi mdi-chevron-down ms-1"></i></span>
-            </template>
-            <BDropdownItem>Oct 2021</BDropdownItem>
-            <BDropdownItem>Nov 2021</BDropdownItem>
-            <BDropdownItem>Dec 2021</BDropdownItem>
-            <BDropdownItem>Jan 2022</BDropdownItem>
-          </BDropdown>
-        </div>
-      </div>
+    <BCardHeader class="align-items-center d-flex py-3">
+      <BCardTitle class="mb-0 flex-grow-1">Deals Forecast</BCardTitle>
     </BCardHeader>
 
     <BCardBody class="pb-0">

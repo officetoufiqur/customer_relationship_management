@@ -1,103 +1,93 @@
-<script>
-import simplebar from 'simplebar-vue';
-export default {
-  components: {
-    simplebar
+<script setup>
+import { ref, computed } from 'vue';
+
+const props = defineProps({
+  tasks: {
+    type: Array,
+    default: [],
   },
-  setup() {
-    return {
-      tasks: [
-        {
-          id: 1,
-          forId: "task_one",
-          text: "Review and make sure nothing slips through cracks",
-          date: "15 Sep, 2021",
-        },
-        {
-          id: 2,
-          forId: "task_two",
-          text: "Send meeting invites for sales upcampaign",
-          date: "20 Sep, 2021",
-        },
-        {
-          id: 3,
-          forId: "task_three",
-          text: "Weekly closed sales won checking with sales team",
-          date: "24 Sep, 2021",
-        },
-        {
-          id: 4,
-          forId: "task_four",
-          text: "Add notes that can be viewed from the individual view",
-          date: "27 Sep, 2021",
-        },
-        {
-          id: 5,
-          forId: "task_five",
-          text: "Move stuff to another page",
-          date: "27 Sep, 2021",
-        },
-        {
-          id: 6,
-          forId: "task_six",
-          text: "Styling wireframe design and documentation for velzon admin",
-          date: "27 Sep, 2021",
-        },
-      ],
-    };
-  },
-};
+});
+
+const tasks = ref(props.tasks);
+
+
+const currentPage = ref(1);
+const perPage = ref(5);
+
+// Computed to slice tasks for current page
+const paginatedTasks = computed(() => {
+  const start = (currentPage.value - 1) * perPage.value;
+  const end = start + perPage.value;
+  return tasks.value.slice(start, end);
+});
+
+const totalPages = computed(() => Math.ceil(tasks.value.length / perPage.value));
+
+function nextPage() {
+  if (currentPage.value < totalPages.value) currentPage.value++;
+}
+
+function prevPage() {
+  if (currentPage.value > 1) currentPage.value--;
+}
 </script>
 
 <template>
-  <BCard no-body class="card-height-100">
-    <BCardHeader class="align-items-center d-flex py-0">
-      <BCardTitle class="mb-0 flex-grow-1">My Tasks</BCardTitle>
-      <div class="flex-shrink-0">
-        <BDropdown variant="link" class="card-header-dropdown" toggle-class="text-reset dropdown-btn arrow-none"
-          menu-class="dropdown-menu-end" aria-haspopup="true" :offset="{ alignmentAxis: 1, crossAxis: 0, mainAxis: 0 }">
-          <template #button-content> <span class="text-muted"><i
-                class="ri-settings-4-line align-middle me-1 fs-15"></i>Settings</span>
-          </template>
-          <BDropdownItem>Edit</BDropdownItem>
-          <BDropdownItem>Remove</BDropdownItem>
-        </BDropdown>
-      </div>
+  <BCard no-body class="card-height-100 position-relative">
+    <BCardHeader class="align-items-center d-flex py-3">
+      <BCardTitle class="mb-0 flex-grow-1">All Tasks</BCardTitle>
     </BCardHeader>
 
-    <BCardBody class="p-0">
-      <div class="align-items-center p-3 justify-content-between d-flex">
-        <div class="flex-shrink-0">
-          <div class="text-muted">
-            <span class="fw-semibold">4</span> of
-            <span class="fw-semibold">10</span> remaining
-          </div>
-        </div>
-        <BButton type="button" variant="success" size="sm">
-          <i class="ri-add-line align-middle me-1"></i> Add Task
-        </BButton>
+    <BCardBody style="height: 325px;">
+      <div class="table-responsive table-card">
+        <table class="table table-borderless table-hover table-nowrap align-middle mb-0">
+          <thead class="table-light">
+            <tr class="text-muted">
+              <th scope="col">#</th>
+              <th scope="col">Attachment</th>
+              <th scope="col">Title</th>
+              <th scope="col">Description</th>
+              <th scope="col">Deadline</th>
+            </tr>
+          </thead>
+
+          <tbody>
+            <tr v-for="(item, index) of paginatedTasks" :key="index" class="border-bottom">
+              <td>{{ item.id }}</td>
+              <td>
+                <img v-if="item.attachment" :src="item.attachment" alt="" class="avatar-xs rounded-circle me-2" />
+                <p v-else class="text-muted">N/A</p>
+              </td>
+              <td>{{ item.title }}</td>
+              <td>{{ item.description }}</td>
+              <td>{{ item.deadline }}</td>
+            </tr>
+          </tbody>
+        </table>
       </div>
 
-      <simplebar data-simplebar style="max-height: 219px">
-        <ul class="list-group list-group-flush border-dashed px-3">
-          <li class="list-group-item ps-0" v-for="(item, index) in tasks" :key="index">
-            <div class="d-flex align-items-start">
-              <div class="form-check ps-0 flex-sharink-0">
-                <input type="checkbox" class="form-check-input ms-0" :id="`${item.forId}`" />
-              </div>
-              <div class="flex-grow-1">
-                <label class="form-check-label mb-0 ps-2" :for="`${item.forId}`">{{ item.text }}</label>
-              </div>
-              <div class="flex-shrink-0 ms-2">
-                <p class="text-muted fs-12 mb-0">{{ item.date }}</p>
-              </div>
-            </div>
-          </li>
-        </ul>
-      </simplebar>
-      <div class="p-3 pt-2">
-        <BLink href="javascript:void(0);" class="text-muted text-decoration-underline">Show more...</BLink>
+      <!-- Pagination -->
+      <div class="d-flex gap-2 align-items-center p-3 position-absolute bottom-0 start-0 w-100 bg-white border-top">
+        <div class="nextBtn" @click="prevPage" :disabled="currentPage === 1">
+          <i class="bx bxs-chevron-left"></i>
+        </div>
+        <div class="nextBtn" variant="secondary" @click="nextPage" :disabled="currentPage === totalPages">
+          <i class="bx bxs-chevron-right"></i>
+        </div>
+        <div>Page {{ currentPage }} of {{ totalPages }}</div>
       </div>
     </BCardBody>
   </BCard>
 </template>
+<style>
+.nextBtn {
+  background: #F3F3F9;
+  cursor: pointer;
+  border-radius: 2px;
+}
+
+.nextBtn i {
+  font-size: 20px;
+  color: #878A99;
+}
+</style>

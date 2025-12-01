@@ -2,7 +2,7 @@
 import Layout from "@/Layouts/main.vue";
 import PageHeader from "@/Components/page-header.vue";
 import { ref, computed, watch, onMounted, nextTick } from "vue";
-import { Link, router, useForm } from "@inertiajs/vue3";
+import { Link, router, useForm, usePage } from "@inertiajs/vue3";
 import { CountTo } from "vue3-count-to";
 import Swal from "sweetalert2";
 import $ from "jquery";
@@ -10,36 +10,39 @@ import { reactive } from "vue";
 import { can } from "@/helpers/can";
 
 const props = defineProps({
-    permissions: Array,
+    balance: Array,
 });
 
 // ========== base form ==========
-const baseForm = ref({
+const form = useForm({
     id: "",
-    name: "",
+    type: "",
+    opening_balance: "",
 });
-
-const form = useForm({ ...baseForm.value });
-const editForm = useForm({ ...baseForm.value });
 
 // ========== show all data ==========
 const tableHeaders = [
     { key: "id", label: "ID", sortable: true },
     { key: "name", label: "Name", sortable: true },
-    { key: "actions", label: "Actions", sortable: false },
+    { key: "type", label: "Type", sortable: true },
+    { key: "opening_balance", label: "Opening Balance", sortable: true },
+    { key: "current_balance", label: "Current Balance", sortable: true }
 ];
 
 const searchQuery = ref("");
 
 const filteredData = computed(() => {
-    let data = props.permissions ?? [];
+    let data = props.balance ?? [];
 
     if (searchQuery.value) {
         const s = searchQuery.value.toLowerCase();
 
         data = data.filter((c) => {
             return (
-                String(c.name ?? "").toLowerCase().includes(s)
+                String(c.name ?? "").toLowerCase().includes(s) ||
+                String(c.type ?? "").toLowerCase().includes(s) ||
+                String(c.current_balance ?? "").toLowerCase().includes(s) ||
+                String(c.opening_balance ?? "").toLowerCase().includes(s)
             );
         });
     }
@@ -58,12 +61,12 @@ const filteredData = computed(() => {
 // ============== Create ==============
 const toggleCreateModal = ref(false);
 
-const permissionCreateModal = () => {
+const balanceCreateModal = () => {
     toggleCreateModal.value = true;
 };
 
 const handleSubmit = async () => {
-    if (!form.name) {
+    if (!form.type || !form.opening_balance) {
         Swal.fire(
             "Validation Error",
             "Please fill all required fields",
@@ -72,9 +75,9 @@ const handleSubmit = async () => {
         return;
     }
 
-    form.post("/permission/store", {
+    form.post("/balance/store", {
         onSuccess: () => {
-            Swal.fire("Created!", "Permission added successfully", "success");
+            Swal.fire("Created!", "Balance added successfully", "success");
             toggleCreateModal.value = false;
             form.reset();
         },
@@ -85,51 +88,41 @@ const handleSubmit = async () => {
     });
 };
 
-// ============== Edit modal ==============
-const toggleEditModal = ref(false);
+// ============== Create ==============
+const transferForm = useForm({
+    transfer_amount: "",
+})
+const toggleTransferModal = ref(false);
 
-const editModal = (permission) => {
-    toggleEditModal.value = true;
-
-    editForm.id = permission.id;
-    editForm.name = permission.name;
+const balancetransferModal = () => {
+    toggleTransferModal.value = true;
 };
 
-const handleUpdateSubmit = () => {
-    editForm.post(`/permission/update/${editForm.id}`, {
+const handleTransferSubmit = async () => {
+    if (!transferForm.transfer_amount) {
+        Swal.fire(
+            "Validation Error",
+            "Please fill all required fields",
+            "warning"
+        );
+        return;
+    }
+
+    transferForm.post("/balance/transfer", {
         onSuccess: () => {
-            Swal.fire("Updated!", "Permission updated successfully", "success");
-            toggleEditModal.value = false;
-            editForm.reset();
+            const { flash } = usePage().props.value; // get flash messages
+            if (flash?.message) {
+                Swal.fire("Success!", flash.message, "success");
+            } else if (flash?.error) {
+                Swal.fire("Error!", flash.error, "error");
+            } else {
+                Swal.fire("Success!", "Transfer successful", "success");
+            }
         },
-    });
-};
-
-// ============== delete ==============
-const deleteData = (permission) => {
-    Swal.fire({
-        title: "Are you sure?",
-        text: "You won't be able to revert this!",
-        icon: "warning",
-        showCancelButton: true,
-        confirmButtonText: "Yes, delete it!",
-        cancelButtonText: "Cancel",
-    }).then((result) => {
-        if (result.isConfirmed) {
-            form.delete(`/permission/destroy/${permission.id}`, {
-                onSuccess: () => {
-                    Swal.fire(
-                        "Deleted!",
-                        "Task deleted successfully",
-                        "success"
-                    );
-                },
-                onError: (error) => {
-                    console.error(error);
-                    Swal.fire("Error", "Something went wrong", "error");
-                },
-            });
-        }
+        onError: (errors) => {
+            console.error(errors);
+            Swal.fire("Error", "Creation failed", "error");
+        },
     });
 };
 
@@ -169,7 +162,7 @@ watch(searchQuery, () => {
 
 <template>
     <Layout>
-        <PageHeader title="List View" pageTitle="Permissions" />
+        <PageHeader title="List View" pageTitle="Balance" />
 
         <BRow>
             <BCol lg="12">
@@ -178,12 +171,18 @@ watch(searchQuery, () => {
                     <BCardHeader class="border-0">
                         <div class="d-flex align-items-center">
                             <h5 class="card-title mb-0 flex-grow-1">
-                                All Permission
+                                All Balance
                             </h5>
                             <div class="d-flex gap-2">
-                                <BButton v-if="can('permission_create')" variant="danger" @click="permissionCreateModal">
+                                <BButton v-if="can('balance_create')" variant="danger" @click="balancetransferModal">
                                     <i class="ri-add-line me-1"></i>
-                                    Create Permission
+                                    Transfer Money
+                                </BButton>
+                            </div>
+                            <div v-if="balance.length < 0" class="d-flex gap-2">
+                                <BButton v-if="can('balance_create')" variant="danger" @click="balanceCreateModal">
+                                    <i class="ri-add-line me-1"></i>
+                                    Create Opening Balances
                                 </BButton>
                             </div>
                         </div>
@@ -220,12 +219,9 @@ watch(searchQuery, () => {
                             <table class="table align-middle table-nowrap mb-0">
                                 <thead class="table-light text-muted">
                                     <tr>
-                                        <th style="width: 2px">
-                                            <input class="form-check-input" type="checkbox" />
-                                        </th>
                                         <th v-for="header in tableHeaders" :key="header.key" :data-sort="header.key"
                                             :style="{
-                                                width: header.width || '100px',
+                                                width: header.width || 'auto',
                                             }" class="sort" @click="
                                                 header.sortable
                                                     ? onSort(header.key)
@@ -237,21 +233,12 @@ watch(searchQuery, () => {
                                 </thead>
 
                                 <tbody>
-                                    <tr v-for="(permission, i) in resultQuery" :key="i">
-                                        <td>
-                                            <input class="form-check-input" type="checkbox" />
-                                        </td>
-
-                                        <td>{{ permission.id }}</td>
-                                        <td>{{ permission.name }}</td>
-                                        <td class="d-flex gap-2">
-                                            <BButton v-if="can('permission_edit')" variant="success px-3" @click="editModal(permission)">
-                                                Edit
-                                            </BButton>
-                                            <BButton v-if="can('permission_delete')" variant="danger px-3" @click="deleteData(permission)">
-                                                Delete
-                                            </BButton>
-                                        </td>
+                                    <tr v-for="(balance, i) in resultQuery" :key="i">
+                                        <td>{{ balance.id }}</td>
+                                        <td>{{ balance.name }}</td>
+                                        <td>{{ balance.type }}</td>
+                                        <td>{{ balance.opening_balance }}</td>
+                                        <td>{{ balance.current_balance }}</td>
                                     </tr>
                                 </tbody>
                             </table>
@@ -290,21 +277,37 @@ watch(searchQuery, () => {
             </BCol>
         </BRow>
 
-        <!-- permission create modal -->
+        <!-- balance create modal -->
         <BModal v-model="toggleCreateModal" id="showmodal" modal-class="zoomIn" hide-footer
-            header-class="p-3 bg-info-subtle permissionModal" class="v-modal-custom" centered size="lg"
-            :title="'Add permission'">
+            header-class="p-3 bg-info-subtle balanceModal" class="v-modal-custom" centered size="lg"
+            :title="'Add balance'">
             <BFrom id="addform" class="tablelist-form" autocomplete="off">
                 <BRow class="g-3">
-                    <!-- name -->
-                    <BCol lg="12">
-                        <label class="form-label">Name</label>
-                        <input type="text" class="form-control" placeholder="Enter name" v-model="form.name"
-                            :class="{
-                                'is-invalid': submitted && !form.name,
+                    <!-- Method Name -->
+                    <BCol lg="6">
+                        <label class="form-label">Method Name</label>
+                        <select class="form-control" v-model="form.type" :class="{
+                            'is-invalid': submitted && !form.type,
+                        }">
+                            <option value="">Select Method Name</option>
+                            <option value="bank">Bank</option>
+                            <option value="credit_card">Credit Card</option>
+                            <option value="cash">Cash</option>
+                        </select>
+                        <div class="invalid-feedback">
+                            Please enter Method Name.
+                        </div>
+                    </BCol>
+
+                    <!-- opening_balance -->
+                    <BCol lg="6">
+                        <label class="form-label">Opening Balance</label>
+                        <input type="number" class="form-control" placeholder="Enter opening balance"
+                            v-model="form.opening_balance" :class="{
+                                'is-invalid': submitted && !form.opening_balance,
                             }" />
                         <div class="invalid-feedback">
-                            Please enter name.
+                            Please enter opening_balance.
                         </div>
                     </BCol>
                 </BRow>
@@ -315,38 +318,39 @@ watch(searchQuery, () => {
                     </BButton>
 
                     <BButton type="submit" variant="success" @click="handleSubmit">
-                        Permission Create
+                        Create
                     </BButton>
                 </div>
             </BFrom>
         </BModal>
 
-        <!-- permission edit modal -->
-        <BModal v-model="toggleEditModal" id="showmodal" modal-class="zoomIn" hide-footer
-            header-class="p-3 bg-info-subtle permissionModal" class="v-modal-custom" centered size="lg"
-            :title="'Edit permission'">
+        <!-- balance transfer modal -->
+        <BModal v-model="toggleTransferModal" id="showmodal" modal-class="zoomIn" hide-footer
+            header-class="p-3 bg-info-subtle balanceModal" class="v-modal-custom" centered size="lg"
+            :title="'Transfer balance'">
             <BFrom id="addform" class="tablelist-form" autocomplete="off">
+                <p>From Bank to Credit Card</p>
                 <BRow class="g-3">
-                    <!-- name -->
-                    <BCol lg="12">
-                        <label class="form-label">Name</label>
-                        <input type="text" class="form-control" placeholder="Enter name" v-model="editForm.name"
-                            :class="{
-                                'is-invalid': submitted && !editForm.name,
+                    <!-- transfer_amount -->
+                    <BCol lg="6">
+                        <label class="form-label">Transfer Balance</label>
+                        <input type="number" class="form-control" placeholder="Enter transfer balance"
+                            v-model="transferForm.transfer_amount" :class="{
+                                'is-invalid': submitted && !transferForm.transfer_amount,
                             }" />
                         <div class="invalid-feedback">
-                            Please enter name.
+                            Please enter transfer_amount.
                         </div>
                     </BCol>
                 </BRow>
 
                 <div class="hstack gap-2 justify-content-end mt-3">
-                    <BButton type="button" variant="light" @click="toggleEditModal = false">
+                    <BButton type="button" variant="light" @click="toggleCreateModal = false">
                         Close
                     </BButton>
 
-                    <BButton type="submit" variant="success" @click="handleUpdateSubmit">
-                        Update permission
+                    <BButton type="submit" variant="success" @click="handleTransferSubmit">
+                        Transfer Amount
                     </BButton>
                 </div>
             </BFrom>

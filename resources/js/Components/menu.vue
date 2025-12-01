@@ -224,7 +224,7 @@ onMounted(() => {
                     </Link>
                 </li>
 
-                <li class="nav-item">
+                <!-- <li class="nav-item">
                     <a class="nav-link menu-link" href="#sidebarexpense" data-bs-toggle="collapse" role="button"
                         aria-expanded="false" aria-controls="sidebarexpense">
                         <i class="bx bx-money"></i>
@@ -245,6 +245,33 @@ onMounted(() => {
                             <li class="nav-item">
                                 <Link class="nav-link menu-link" href="/financial/logs">
                                 <span data-key="t-expenses">Financial Logs</span>
+                                </Link>
+                            </li>
+                        </ul>
+                    </div>
+                </li> -->
+
+                <li class="nav-item">
+                    <a class="nav-link menu-link" href="#sidebarbalance" data-bs-toggle="collapse" role="button"
+                        aria-expanded="false" aria-controls="sidebarbalance">
+                        <i class="bx bx-money"></i>
+                        <span data-key="t-balance">Balance Management</span>
+                    </a>
+                    <div class="collapse menu-dropdown" id="sidebarbalance">
+                        <ul class="nav nav-sm flex-column">
+                            <li class="nav-item">
+                                <Link class="nav-link menu-link" href="/balance">
+                                <span data-key="t-balances">Balances List</span>
+                                </Link>
+                            </li>
+                            <li class="nav-item">
+                                <Link class="nav-link menu-link" href="/quotation">
+                                <span data-key="t-balances">Quotation</span>
+                                </Link>
+                            </li>
+                            <li class="nav-item">
+                                <Link class="nav-link menu-link" href="/expenses">
+                                <span data-key="t-balances">Expenses</span>
                                 </Link>
                             </li>
                         </ul>

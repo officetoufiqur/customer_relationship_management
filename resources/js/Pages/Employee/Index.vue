@@ -4,6 +4,7 @@ import PageHeader from "@/Components/page-header.vue";
 import { ref, reactive, computed } from "vue";
 import { router, useForm } from "@inertiajs/vue3";
 import Swal from "sweetalert2";
+import { can } from "@/helpers/can";
 
 const props = defineProps({
     users: Array,
@@ -170,7 +171,7 @@ const viewEmployee = (user) => {
                                     <BButton variant="soft-danger" class="me-1" id="remove-actions">
                                         <i class="ri-delete-bin-2-line"></i>
                                     </BButton>
-                                    <BButton variant="danger" class="add-btn" @click="toggleModal">
+                                    <BButton v-if="can('create_users')" variant="danger" class="add-btn" @click="toggleModal">
                                         <i class="ri-add-line align-bottom me-1"></i>
                                         Create user
                                     </BButton>
@@ -295,7 +296,7 @@ const viewEmployee = (user) => {
                                         <td>{{ user.department }}</td>
                                         <td>{{ user.salary }}</td>
                                         <td class="d-flex gap-2">
-                                            <BButton variant="danger px-3" class="add-btn"
+                                            <BButton v-if="can('update_users')" variant="danger px-3" class="add-btn"
                                                 @click="toggleEditModal(user)">
                                                 Edit
                                             </BButton>

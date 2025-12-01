@@ -2,6 +2,8 @@
 
 namespace App\Http\Controllers;
 
+use App\Helpers\FileUpload;
+use App\Models\Balance;
 use App\Models\Company;
 use App\Models\Employee;
 use App\Models\Expense;
@@ -13,15 +15,66 @@ use Inertia\Inertia;
 
 class ExpenseController extends Controller
 {
-    public function expenseList()
+    public function index()
     {
         $expenses = Expense::all();
-        $companys = Company::all();
+        $balances = Balance::select('id', 'type', 'name')->get();
 
         return Inertia::render('Expense/Index', [
             'expenses' => $expenses,
-            'companys' => $companys,
+            'balances' => $balances,
         ]);
+    }
+
+    public function store(Request $request)
+    {
+        $request->validate([
+            'balance_id' => 'required',
+            'title' => 'required',
+            'amount' => 'required|numeric',
+            'description' => 'required',
+            'attachment' => 'required|file|mimes:jpg,jpeg,png,pdf|max:2048',
+        ]);
+
+        $filePath = FileUpload::storeFile($request->file('attachment'), 'uploads/expense');
+
+        Expense::create([
+            'balance_id' => $request->balance_id,
+            'created_by' => Auth::user()->id,
+            'title' => $request->title,
+            'amount' => $request->amount,
+            'description' => $request->description,
+            'attachment' => $filePath,
+        ]);
+
+        return redirect()->back()->with('success', 'Expense request submitted successfully.');
+    }
+
+    public function update(Request $request, $id)
+    {
+        $request->validate([
+            'balance_id' => 'required',
+            'title' => 'required',
+            'amount' => 'required|numeric',
+            'description' => 'required',
+            // 'attachment' => 'nullable|file|mimes:jpg,jpeg,png,pdf|max:2048',
+        ]);
+        // return $request->all();
+
+        $expense = Expense::find($id);
+
+        if ($request->hasFile('attachment')) {
+            $filePath = FileUpload::updateFile($request->file('attachment'), 'uploads/expense', $expense->attachment);
+            $expense->attachment = $filePath;
+        }
+
+        $expense->balance_id = $request->balance_id;
+        $expense->title = $request->title;
+        $expense->amount = $request->amount;
+        $expense->description = $request->description;
+        $expense->save();
+
+        return redirect()->back()->with('success', 'Expense request updated successfully.');
     }
 
     public function expenseRequest(Request $request)
@@ -121,7 +174,13 @@ class ExpenseController extends Controller
 
     public function expenseDestroy($id)
     {
-        Expense::find($id)->delete();
+        $expense = Expense::find($id);
+
+        if ($expense->attachment) {
+            FileUpload::deleteFile($expense->attachment);
+        }
+
+        $expense->delete();
 
         return redirect()->back()->with('success', 'Expense deleted successfully.');
     }
@@ -130,16 +189,14 @@ class ExpenseController extends Controller
     {
         $expense = Expense::find($id);
 
-        $expense->status = $request->status;
+        $expense->is_approved = $request->is_approved;
         $expense->save();
 
-        if ($request->status == 'approved') {
-            $financialLog = new FinancialLog;
-            $financialLog->expense_id = $expense->id;
-            $financialLog->employee_id = $expense->employee_id;
-            $financialLog->company_id = $expense->company_id;
-            $financialLog->amount = $expense->amount;
-            $financialLog->save();
+        if ($request->is_approved == '1') {
+            $balance = Balance::where('id', $expense->balance_id)->first();
+
+            $balance->current_balance = $balance->current_balance - $expense->amount;
+            $balance->save();
         }
 
         return redirect()->back()->with('success', 'Expense status updated successfully.');
@@ -151,7 +208,7 @@ class ExpenseController extends Controller
 
         // return $logs;
         return Inertia::render('FinancialLog/Index', [
-            'logs' => $logs
+            'logs' => $logs,
         ]);
     }
 }

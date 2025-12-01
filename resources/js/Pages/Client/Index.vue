@@ -6,6 +6,7 @@ import { Link, useForm } from "@inertiajs/vue3";
 import { CountTo } from "vue3-count-to";
 import Swal from "sweetalert2";
 import $ from "jquery";
+import { can } from "@/helpers/can";
 
 const props = defineProps({
     clients: Array,
@@ -407,7 +408,7 @@ watch(searchQuery, () => {
                                 All Companies
                             </h5>
                             <div class="d-flex gap-2">
-                                <BButton
+                                <BButton v-if="can('client_create')"
                                     variant="danger"
                                     @click="clientCreateModal"
                                 >
@@ -510,21 +511,21 @@ watch(searchQuery, () => {
                                         <td>{{ client.project_cost }}</td>
                                         <td>{{ client.follow_up_status }}</td>
                                         <td class="d-flex gap-2">
-                                            <BButton
+                                            <BButton v-if="can('send_quotation')"
                                                 variant="primary px-3"
                                                 @click="quotationModal(client)"
                                             >
                                                 Send Quotations
                                             </BButton>
 
-                                            <BButton
+                                            <BButton v-if="can('client_edit')"
                                                 variant="success px-3"
                                                 @click="editModal(client)"
                                             >
                                                 Edit
                                             </BButton>
 
-                                            <BButton
+                                            <BButton v-if="can('client_delete')"
                                                 variant="danger px-3"
                                                 @click="deleteData(client)"
                                             >

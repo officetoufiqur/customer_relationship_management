@@ -134,7 +134,7 @@ const clearPhotoFileInput = () => {
         </template>
 
         <template #actions>
-            <BButton variant="success w-100" type="submit" :class="{ 'opacity-25': form.processing }" :disabled="form.processing">Save</BButton>
+            <BButton variant="success w-25" type="submit" :class="{ 'opacity-25': form.processing }" :disabled="form.processing">Save</BButton>
             <p v-if="form.recentlySuccessful" class="alert alert-info mt-3">Profile Saved.</p>
         </template>
     </FormSection>

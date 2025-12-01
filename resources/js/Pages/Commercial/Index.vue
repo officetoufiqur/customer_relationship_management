@@ -8,6 +8,7 @@ import Swal from "sweetalert2";
 import $ from "jquery";
 import { Inertia } from "@inertiajs/inertia";
 import { reactive } from "vue";
+import { can } from "@/helpers/can";
 
 const props = defineProps({
     address: Array,
@@ -354,7 +355,7 @@ watch(
                                 All Companies
                             </h5>
                             <div class="d-flex gap-2">
-                                <BButton variant="danger" @click="addresCreateModal">
+                                <BButton v-if="can('address_create')" variant="danger" @click="addresCreateModal">
                                     <i class="ri-add-line me-1"></i>
                                     Create addres
                                 </BButton>
@@ -438,11 +439,11 @@ watch(
                                         <td>{{ addres.contact_value }}</td>
                                         <td>{{ addres.net_profit }}</td>
                                         <td class="d-flex gap-2">
-                                            <BButton variant="success px-3" @click="editModal(addres)">
+                                            <BButton v-if="can('address_edit')" variant="success px-3" @click="editModal(addres)">
                                                 Edit
                                             </BButton>
 
-                                            <BButton variant="danger px-3" @click="deleteData(addres)">
+                                            <BButton v-if="can('address_delete')" variant="danger px-3" @click="deleteData(addres)">
                                                 Delete
                                             </BButton>
 

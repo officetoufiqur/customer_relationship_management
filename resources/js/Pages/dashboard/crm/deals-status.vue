@@ -1,121 +1,82 @@
-<script>
-import avatar1 from "@assets/images/users/avatar-1.jpg";
-import avatar2 from "@assets/images/users/avatar-2.jpg";
-import avatar3 from "@assets/images/users/avatar-3.jpg";
-import avatar4 from "@assets/images/users/avatar-4.jpg";
-import avatar6 from "@assets/images/users/avatar-6.jpg";
+<script setup>
+import { ref, computed, watch } from "vue";
 
-export default {
-  setup() {
-    return {
-      dealsStatus: [
-        {
-          id: 1,
-          name: "Absternet LLC",
-          date: "Sep 20, 2021",
-          img: avatar1,
-          representativeName: "Donald Risher",
-          badgeClass: "success",
-          status: "Deal Won",
-          statusValue: "$100.1K",
-        },
-        {
-          id: 2,
-          name: "Raitech Soft",
-          date: "Sep 23, 2021",
-          img: avatar2,
-          representativeName: "Sofia Cunha",
-          badgeClass: "warning",
-          status: "Intro Call",
-          statusValue: "$150K",
-        },
-        {
-          id: 3,
-          name: "William PVT",
-          date: "Sep 27, 2021",
-          img: avatar3,
-          representativeName: "Luis Rocha",
-          badgeClass: "danger",
-          status: "Stuck",
-          statusValue: "$78.18K",
-        },
-        {
-          id: 4,
-          name: "Loiusee LLP",
-          date: "Sep 30, 2021",
-          img: avatar4,
-          representativeName: "Vitoria Rodrigues",
-          badgeClass: "success",
-          status: "Deal Won",
-          statusValue: "$180K",
-        },
-        {
-          id: 5,
-          name: "Apple Inc.",
-          date: "Sep 30, 2021",
-          img: avatar6,
-          representativeName: "Vitoria Rodrigues",
-          badgeClass: "info",
-          status: "New Lead",
-          statusValue: "$78.9K",
-        },
-      ],
-    };
-  },
-};
+const props = defineProps({
+  performance: {
+    type: Array,
+    default: () => []
+  }
+});
+
+const dealsStatus = ref(props.performance);
+
+// Pagination
+const currentPage = ref(1);
+const perPage = ref(5);
+
+const totalPages = computed(() => Math.ceil(dealsStatus.value.length / perPage.value));
+
+const paginatedDeals = computed(() => {
+  const start = (currentPage.value - 1) * perPage.value;
+  const end = start + perPage.value;
+  return dealsStatus.value.slice(start, end);
+});
+
+function nextPage() {
+  if (currentPage.value < totalPages.value) currentPage.value++;
+}
+
+function prevPage() {
+  if (currentPage.value > 1) currentPage.value--;
+}
+
+// Reset page if performance array changes
+watch(() => props.performance, (newVal) => {
+  dealsStatus.value = newVal;
+  currentPage.value = 1;
+});
 </script>
 
 <template>
-  <BCard no-body>
-    <BCardHeader class="align-items-center d-flex py-0">
-      <BCardTitle class="mb-0 flex-grow-1">Deals Status</BCardTitle>
-      <div class="flex-shrink-0">
-        <BDropdown variant="link" class="card-header-dropdown" toggle-class="text-reset dropdown-btn arrow-none"
-          menu-class="dropdown-menu-end" aria-haspopup="true" :offset="{ alignmentAxis: 25, crossAxis: 0, mainAxis: 0 }">
-          <template #button-content> <span class="text-muted">02 Nov 2021 to 31 Dec 2021<i
-                class="mdi mdi-chevron-down ms-1"></i></span>
-          </template>
-          <BDropdownItem>Today</BDropdownItem>
-          <BDropdownItem>Last Week</BDropdownItem>
-          <BDropdownItem>Last Month</BDropdownItem>
-          <BDropdownItem>Current Year</BDropdownItem>
-        </BDropdown>
-      </div>
+  <BCard no-body class="position-relative">
+    <BCardHeader class="align-items-center d-flex py-3">
+      <BCardTitle class="mb-0 flex-grow-1">Employee Performance Overview</BCardTitle>
     </BCardHeader>
 
-    <BCardBody>
+    <BCardBody style="height: 325px; padding-bottom: 60px;">
       <div class="table-responsive table-card">
         <table class="table table-borderless table-hover table-nowrap align-middle mb-0">
           <thead class="table-light">
             <tr class="text-muted">
-              <th scope="col">Name</th>
-              <th scope="col" style="width: 20%">Last Contacted</th>
-              <th scope="col">Sales Representative</th>
-              <th scope="col" style="width: 16%">Status</th>
-              <th scope="col" style="width: 12%">Deal Value</th>
+              <th scope="col">ID</th>
+              <th scope="col" style="width: 20%">Name</th>
+              <th scope="col">Email</th>
+              <th scope="col" style="width: 12%">Performance</th>
             </tr>
           </thead>
 
           <tbody>
-            <tr v-for="(item, index) of dealsStatus" :key="index">
+            <tr v-for="item in paginatedDeals" :key="item.id" class="border-bottom">
+              <td>{{ item.id }}</td>
               <td>{{ item.name }}</td>
-              <td>{{ item.date }}</td>
-              <td>
-                <img :src="`${item.img}`" alt="" class="avatar-xs rounded-circle me-2" />
-                <BLink href="#javascript: void(0);" class="text-body fw-medium">{{ item.representativeName }}</BLink>
-              </td>
-              <td>
-                <span
-                  :class="{ 'badge bg-success-subtle text-success p-2': item.status == 'Deal Won', 'badge bg-warning-subtle text-warning p-2': item.status == 'Intro Call', 'badge bg-danger-subtle text-danger p-2': item.status == 'Stuck', 'badge bg-info-subtle text-info p-2': item.status == 'New Lead' }">{{
-                    item.status }}</span>
-              </td>
-              <td>
-                <div class="text-nowrap">{{ item.statusValue }}</div>
-              </td>
+              <td>{{ item.email }}</td>
+              <td>{{ item.performance }}%</td>
             </tr>
           </tbody>
         </table>
       </div>
+
+      <!-- Pagination -->
+      <div class="d-flex gap-2 align-items-center p-3 position-absolute bottom-0 start-0 w-100 bg-white border-top">
+        <div class="nextBtn" @click="prevPage" :disabled="currentPage === 1">
+          <i class="bx bxs-chevron-left"></i>
+        </div>
+        <div class="nextBtn" variant="secondary" @click="nextPage" :disabled="currentPage === totalPages">
+          <i class="bx bxs-chevron-right"></i>
+        </div>
+        <div>Page {{ currentPage }} of {{ totalPages }}</div>
+      </div>
+      
     </BCardBody>
   </BCard>
 </template>
