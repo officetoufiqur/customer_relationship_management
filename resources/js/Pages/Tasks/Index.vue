@@ -772,9 +772,9 @@ const paginate = (tasks) => {
                     </BCol>
                     <BCol lg="12">
                         <label class="form-label">Assigned To</label>
-                        <simplebar data-simplebar style="height: 120px">
-                            <ul class="list-unstyled vstack gap-2 mb-0">
-                                <li v-for="user in users" :key="user.id">
+                        <simplebar data-simplebar>
+                            <div class="row">
+                                <div class="col-md-3 gap-3" v-for="user in users" :key="user.id">
                                     <div
                                         class="form-check d-flex align-items-center"
                                     >
@@ -805,8 +805,8 @@ const paginate = (tasks) => {
                                             }}</span>
                                         </label>
                                     </div>
-                                </li>
-                            </ul>
+                                </div>
+                            </div>
                         </simplebar>
                         <div
                             class="invalid-feedback"

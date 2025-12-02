@@ -2,9 +2,12 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\Balance;
 use App\Models\Client;
 use App\Models\CommercialAddres;
 use App\Models\Company;
+use App\Models\Expense;
+use App\Models\InvoicePayment;
 use App\Models\Task;
 use App\Models\TaskUser;
 use App\Models\User;
@@ -18,26 +21,8 @@ class DashboardController extends Controller
         $empolyes = User::with('employee')->where('id', '!=', 1)->count();
         $companys = Company::count();
         $address = CommercialAddres::count();
-
-        // Monthly Revenue & Expenses for chart
-        $rawMonthlyData = CommercialAddres::selectRaw('
-        MONTH(created_at) AS month,
-        SUM(net_profit) AS revenue,
-        SUM(contact_value) AS expenses
-    ')
-            ->groupBy('month')
-            ->orderBy('month')
-            ->get()
-            ->keyBy('month');
-
-        // Build 12 months array
-        $monthly = collect(range(1, 12))->map(function ($m) use ($rawMonthlyData) {
-            return [
-                'month' => $m,
-                'revenue' => isset($rawMonthlyData[$m]) ? (float) $rawMonthlyData[$m]->revenue : 0,
-                'expenses' => isset($rawMonthlyData[$m]) ? (float) $rawMonthlyData[$m]->expenses : 0,
-            ];
-        });
+        $totalAmount = Balance::sum('current_balance');
+        // return $totalAmount;
 
         $dealPending = Client::where('follow_up_status', 'pending')->count();
         $dealWon = Client::where('follow_up_status', 'approved')->count();
@@ -62,16 +47,46 @@ class DashboardController extends Controller
 
         $tasks = Task::all();
 
+        // Get revinue and expense
+        $revinue = InvoicePayment::sum('amount_paid');
+        $expense = Expense::sum('amount');
+
+        // get monthly revinue and expense
+        $monthRevinue = InvoicePayment::selectRaw('MONTH(created_at) as month, SUM(amount_paid) as total')
+            ->whereYear('created_at', date('Y'))
+            ->groupBy('month')
+            ->pluck('total', 'month');
+
+        $expenses = Expense::selectRaw('MONTH(created_at) as month, SUM(amount) as total')
+            ->whereYear('created_at', date('Y'))
+            ->groupBy('month')
+            ->pluck('total', 'month');
+
+        // 12 months initialize with 0
+        $monthWise = collect(range(1, 12))->map(function ($month) use ($expenses) {
+            return $expenses[$month] ?? 0;
+        });
+
+        $montlyRevinue = collect(range(1, 12))->map(function ($month) use ($monthRevinue) {
+            return $monthRevinue[$month] ?? 0;
+        });
+
+        // return $montlyRevinue;
+
         return Inertia::render('dashboard/crm/index', [
             'empolyes' => $empolyes,
             'companys' => $companys,
             'address' => $address,
-            'monthly' => $monthly,
             'dealPending' => $dealPending,
             'dealWon' => $dealWon,
             'dealLoss' => $dealLoss,
             'performance' => $performance,
-            'tasks' => $tasks
+            'tasks' => $tasks,
+            'revinue' => $revinue,
+            'expense' => $expense,
+            'monthWise' => $monthWise,
+            'montlyRevinue' => $montlyRevinue,
+            'totalAmount' => $totalAmount
         ]);
     }
 }

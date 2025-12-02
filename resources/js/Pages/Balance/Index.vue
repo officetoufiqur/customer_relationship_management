@@ -11,6 +11,7 @@ import { can } from "@/helpers/can";
 
 const props = defineProps({
     balance: Array,
+    flash: Object,
 });
 
 // ========== base form ==========
@@ -110,18 +111,13 @@ const handleTransferSubmit = async () => {
 
     transferForm.post("/balance/transfer", {
         onSuccess: () => {
-            const { flash } = usePage().props.value; // get flash messages
-            if (flash?.message) {
-                Swal.fire("Success!", flash.message, "success");
-            } else if (flash?.error) {
-                Swal.fire("Error!", flash.error, "error");
-            } else {
-                Swal.fire("Success!", "Transfer successful", "success");
-            }
+            Swal.fire("Transferred!", "Balance transferred successfully", "success");
+            toggleTransferModal.value = false;
+            transferForm.reset();
         },
         onError: (errors) => {
             console.error(errors);
-            Swal.fire("Error", "Creation failed", "error");
+            Swal.fire("Error", errors.transfer_amount || "Transfer failed", "error");
         },
     });
 };
@@ -163,7 +159,6 @@ watch(searchQuery, () => {
 <template>
     <Layout>
         <PageHeader title="List View" pageTitle="Balance" />
-
         <BRow>
             <BCol lg="12">
                 <BCard no-body>
@@ -179,7 +174,7 @@ watch(searchQuery, () => {
                                     Transfer Money
                                 </BButton>
                             </div>
-                            <div v-if="balance.length < 0" class="d-flex gap-2">
+                            <div v-if="balance.length > 4" class="d-flex gap-2">
                                 <BButton v-if="can('balance_create')" variant="danger" @click="balanceCreateModal">
                                     <i class="ri-add-line me-1"></i>
                                     Create Opening Balances
@@ -344,8 +339,12 @@ watch(searchQuery, () => {
                     </BCol>
                 </BRow>
 
+                <span v-if="props.flash.error" class="text-danger mt-5">
+                    {{ props.flash.error }}
+                </span>
+
                 <div class="hstack gap-2 justify-content-end mt-3">
-                    <BButton type="button" variant="light" @click="toggleCreateModal = false">
+                    <BButton type="button" variant="light" @click="toggleTransferModal = false">
                         Close
                     </BButton>
 

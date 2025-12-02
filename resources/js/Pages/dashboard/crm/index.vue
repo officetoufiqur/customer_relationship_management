@@ -12,21 +12,35 @@ import { ref } from "vue";
 import { CountTo } from "vue3-count-to";
 
 const props = defineProps({
-     empolyes: Number,
-     companys: Number,
-     address: Number,
-     monthly: Array,
-     dealWon: Number,
-     dealPending: Number,
-     dealLoss: Number,
-     performance: Array,
-     tasks: Array,
+  empolyes: Number,
+  companys: Number,
+  address: Number,
+  dealWon: Number,
+  dealPending: Number,
+  dealLoss: Number,
+  performance: Array,
+  tasks: Array,
+  expense: Number,
+  revinue: Number,
+  monthWise: Array,
+  montlyRevinue: Array,
+  totalAmount: Number
 });
 
 //============== count ==============
 const crmWidgets = ref([
   {
     id: 1,
+    label: "Total Amount",
+    badge: "ri-arrow-up-circle-line text-success",
+    icon: "bx bx-money",
+    counter: props.totalAmount,
+    decimals: 0,
+    suffix: "",
+    prefix: "",
+  },
+  {
+    id: 2,
     label: "Total Employees",
     badge: "ri-arrow-up-circle-line text-success",
     icon: "las la-user-friends",
@@ -36,7 +50,7 @@ const crmWidgets = ref([
     prefix: "",
   },
   {
-    id: 2,
+    id: 3,
     label: "Total Companies",
     badge: "ri-arrow-up-circle-line text-success",
     icon: "las la-building",
@@ -46,7 +60,7 @@ const crmWidgets = ref([
     prefix: "",
   },
   {
-    id: 3,
+    id: 4,
     label: "Total Active Address",
     badge: "ri-arrow-down-circle-line text-danger",
     icon: "las la-location-arrow",
@@ -70,7 +84,7 @@ const crmWidgets = ref([
       <BCol xl="12">
         <BCard no-body class="crm-widget">
           <BCardBody class="p-0">
-            <BRow class="row-cols-xxl-3 row-cols-md-3 row-cols-1 g-0">
+            <BRow class="row-cols-xxl-4 row-cols-md-3 row-cols-1 g-0">
               <BCol v-for="(item, index) of crmWidgets" :key="index">
                 <div class="py-4 px-3">
                   <h5 class="text-muted text-uppercase fs-13">
@@ -101,7 +115,8 @@ const crmWidgets = ref([
         <SalesForecast :dealWon="props.dealWon" :dealPending="props.dealPending" :dealLoss="props.dealLoss" />
       </BCol>
       <BCol xxl="7">
-        <BalanceOverview :monthlyData="monthly" />
+        <BalanceOverview :revinue="props.revinue" :expense="props.expense" :monthWise="props.monthWise"
+          :montlyRevinue="props.montlyRevinue" />
       </BCol>
     </BRow>
     <BRow>

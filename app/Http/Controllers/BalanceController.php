@@ -58,15 +58,17 @@ class BalanceController extends Controller
         $amount = $request->transfer_amount;
 
         if ($bank->current_balance < $amount) {
-            return redirect()->back()->with('error', 'Insufficient balance.');
+            return back()->withErrors([
+                'transfer_amount' => 'Insufficient balance.',
+            ]);
         }
-        
+
         $bank->current_balance -= $amount;
         $credit->current_balance += $amount;
 
         $bank->save();
         $credit->save();
 
-        return redirect()->back()->with('success', 'Transfer successful.');
+        return back()->with('message', 'Transfer successful.');
     }
 }

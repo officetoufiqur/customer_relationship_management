@@ -48,10 +48,10 @@ Route::middleware(['auth:sanctum', config('jetstream.auth_session'), 'verified']
 
     Route::controller(TaskController::class)->group(function () {
         Route::get('/tasks-list', 'tasksList')->name('tasks.list');
-        Route::post('/tasks/store', 'tasksStore')->name('tasks.store')->middleware('permission:create_tasks');
-        Route::post('/task/update/{id}', 'tasksUpdate')->name('tasks.update')->middleware('permission:update_tasks');
+        Route::post('/tasks/store', 'tasksStore')->name('tasks.store')->middleware('permission:task_create');
+        Route::post('/task/update/{id}', 'tasksUpdate')->name('tasks.update')->middleware('permission:task_update');
         Route::get('/task/view/{id}', 'tasksView')->name('tasks.view');
-        Route::delete('/tasks/destroy/{id}', 'tasksDestroy')->name('tasks.destroy')->middleware('permission:delete_tasks');
+        Route::delete('/tasks/destroy/{id}', 'tasksDestroy')->name('tasks.destroy')->middleware('permission:task_delete');
         Route::post('/task/reassign/update/{id}', 'reassign')->name('task.reassign');
     });
 
@@ -119,7 +119,13 @@ Route::middleware(['auth:sanctum', config('jetstream.auth_session'), 'verified']
         Route::delete('/quotation/destroy/{id}', 'destroy')->name('quotation.destroy');
     });
 
-    Route::get('/invoice/download/{id}', [InvoiceController::class, 'download'])->name('invoice.download');
+    
+    Route::controller(InvoiceController::class)->group(function () {
+        Route::get('/invoice', 'index')->name('invoice');
+        Route::post('/invoices/store', 'store')->name('invoice.store');
+        Route::post('/invoices/payment/{id}', 'payment')->name('invoice.payment');
+        Route::get('/invoice/download/{id}', 'download')->name('invoice.download');
+    });
 });
 
 Route::middleware(['auth:sanctum', config('jetstream.auth_session'), 'verified'])->group(function () {

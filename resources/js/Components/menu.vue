@@ -274,6 +274,11 @@ onMounted(() => {
                                 <span data-key="t-balances">Expenses</span>
                                 </Link>
                             </li>
+                            <li class="nav-item">
+                                <Link class="nav-link menu-link" href="/invoice">
+                                <span data-key="t-balances">Invoice</span>
+                                </Link>
+                            </li>
                         </ul>
                     </div>
                 </li>
