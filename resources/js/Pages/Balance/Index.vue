@@ -168,17 +168,20 @@ watch(searchQuery, () => {
                             <h5 class="card-title mb-0 flex-grow-1">
                                 All Balance
                             </h5>
-                            <div class="d-flex gap-2">
-                                <BButton v-if="can('balance_create')" variant="danger" @click="balancetransferModal">
-                                    <i class="ri-add-line me-1"></i>
-                                    Transfer Money
-                                </BButton>
-                            </div>
-                            <div v-if="balance.length > 4" class="d-flex gap-2">
-                                <BButton v-if="can('balance_create')" variant="danger" @click="balanceCreateModal">
-                                    <i class="ri-add-line me-1"></i>
-                                    Create Opening Balances
-                                </BButton>
+                            <div class="d-flex gap-3">
+                                <div class="d-flex gap-2">
+                                    <BButton v-if="can('balance_create')" variant="warning"
+                                        @click="balancetransferModal">
+                                        <i class="ri-add-line me-1"></i>
+                                        Transfer Money
+                                    </BButton>
+                                </div>
+                                <div v-if="(!balance || balance.length <= 3)" class="d-flex gap-2">
+                                    <BButton v-if="can('balance_create')" variant="danger" @click="balanceCreateModal">
+                                        <i class="ri-add-line me-1"></i>
+                                        Create Opening Balances
+                                    </BButton>
+                                </div>
                             </div>
                         </div>
                     </BCardHeader>
